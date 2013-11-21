@@ -1,0 +1,333 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<model package="discuss2" baseClass="xPDOObject" platform="mysql" defaultEngine="InnoDB" version="1.1" phpdoc-package="Discuss">
+    <object class="disUser" extends="modUser">
+        <composite alias="disProfile" class="disUserProfile" local="id" foreign="internalKey" cardinality="one" owner="local" />
+        <composite alias="Network" class="disUserNetwork" local="id" foreign="internalKey" cardinality="many" owner="local" />
+        <composite alias="Mention" class="disUserMention" local="id" foreign="internalKey" cardinality="many" owner="local" />
+        <composite alias="IgnoreBoard" class="disUserIgnoreBoard" local="id" foreign="internalKey" cardinality="many" owner="local" />
+        <composite alias="Thread" class="disThread" local="id" foreign="createdby" cardinality="many" owner="local">
+            <criteria target="foreign">
+                <![CDATA[
+                        {"class_key":"disThread"},
+                        {"OR:class_key":"disThreadQuestion"},
+                        {"OR:class_key":"disThreadDiscussion"}
+                ]]>
+            </criteria>
+        </composite>
+        <composite alias="Question" class="disThreadQuestion" local="id" foreign="createdby" cardinality="many" owner="local">
+            <criteria target="foreign">
+                <![CDATA[
+                        {"class_key":"disThreadQuestion"}
+                ]]>
+            </criteria>
+        </composite>
+        <composite alias="Discussion" class="disThreadDiscussion" local="id" foreign="createdby" cardinality="many" owner="local">
+            <criteria target="foreign">
+                <![CDATA[
+                        {"class_key":"disThreadDiscussion"}
+                ]]>
+            </criteria>
+        </composite>
+        <composite alias="Post" class="disPost" local="id" foreign="createdby" cardinality="many" owner="local"/>
+        <composite alias="Activity" class="disUserActivity" local="id" foreign="internalKey" cardinality="many" owner="local" />
+        <composite alias="Attachment" class="disPostAttachment" local="id" foreign="internalKey" cardinality="many" owner="local"/>
+    </object>
+    <object class="disUserProfile" table="user_profile" extends="xPDOObject">
+        <field key="internalKey" dbtype="int" precision="11" phptype="integer" attributes="unsigned" null="false" index="pk" /> <!-- xPDOObject bug with PK fix -->
+        <field key="firstname" dbtype="varchar" precision="64" phptype="string" default="" null="false" />
+        <field key="surname" dbtype="varchar" precision="64" phptype="string" default="" null="false" />
+        <field key="signature" dbtype="text" phptype="string" default="" />
+        <field key="title" dbtype="varchar" precision="32" phptype="string" default="" />
+        <field key="posts" dbtype="int" precision="11" phptype="integer" attributes="unsigned" default="0" />
+        <field key="show_email" dbtype="tinyint" precision="1" phptype="boolean" attributes="unsigned" default="0" />
+        <field key="show_online" dbtype="tinyint" precision="1" phptype="boolean" attributes="unsigned" default="0" />
+        <field key="display_name" dbtype="varchar" precision="64" phptype="string" default="" />
+        <field key="user_display_name" dbtype="tinyint" precision="1" phptype="boolean" default="0" />
+
+        <index alias="primary" name="primary" primary="true" unique="true" type="BTREE">
+            <column key="internalKey" length="" collation="A" null="false" />
+        </index>
+
+        <aggregate alias="User" class="disUser" local="internalKey" foreign="id" cardinality="one" />
+    </object>
+    <object class="disUserNetwork" table="user_network" extends="xPDOObject">
+        <field key="internalKey" dbtype="int" precision="11" phptype="integer" attributes="unsigned" null="false" index="pk" />
+        <field key="friend_id" dbtype="int" precision="11" phptype="integer" attributes="unsigned" null="false" index="pk" />
+        <field key="status" dbtype="tinyint" precision="1" phptype="integer" attributes="unsigned" null="false" default="0" />
+        <field key="status_date" dbtype="timestamp" phptype="datetime" default="CURRENT_TIMESTAMP" attributes="ON UPDATE CURRENT_TIMESTAMP" null="false" />
+
+        <index alias="primary" name="primary" primary="true" unique="true" type="BTREE">
+            <column key="internalKey" length="" collation="A" null="false" />
+            <column key="friend_id" length="" collation="A" null="false" />
+        </index>
+        <index alias="status_idx" name="status_idx" primary="false" unique="false">
+            <column key="status" length="" collation="A" null="false" />
+        </index>
+
+        <aggregate alias="User" class="disUser" local="internalKey" foreign="id" cardinality="one" owner="foreign" />
+        <aggregate alias="Friend" class="disUser" local="friend_id" foreign="id" cardinality="one" owner="foreign" />
+    </object>
+    <object class="disUserMention" table="user_mention" extends="xPDOObject">
+        <field key="internalKey" dbtype="int" precision="11" phptype="integer" attributes="unsigned" null="false" index="pk" />
+        <field key="mentioner_id" dbtype="int" precision="11" phptype="integer" attributes="unsigned" null="false" index="pk" />
+        <field key="thread" dbtype="int" precision="11" phptype="integer" attributes="unsigned" null="false" />
+        <field key="tagged_time" dbtype="timestamp" phptype="datetime" default="CURRENT_TIMESTAMP" attributes="ON UPDATE CURRENT_TIMESTAMP" null="false" />
+
+        <index alias="primary" name="primary" primary="true" unique="true" type="BTREE">
+            <column key="internalKey" length="" collation="A" null="false" />
+            <column key="mentioner_id" length="" collation="A" null="false" />
+        </index>
+        <index alias="thread_idx" name="thread_idx" primary="false" unique="false">
+            <column key="thread" length="" collation="A" null="false" />
+        </index>
+        <index alias="tagged_idx" name="tagged_idx" primary="false" unique="false">
+            <column key="tagged_time" length="" collation="A" null="false" />
+        </index>
+
+        <aggregate alias="User" class="disUser" local="internalKey" foreign="id" cardinality="one" owner="foreign" />
+        <aggregate alias="Mentioner" class="disUser" local="mentioner_id" foreign="id" cardinality="one" owner="foreign" />
+        <aggregate alias="Thread" class="disThread" local="thread" foreign="id" cardinality="one" owner="foreign">
+            <criteria target="foreign">
+                <![CDATA[
+                        {"class_key":"disThread"},
+                        {"OR:class_key":"disThreadQuestion"},
+                        {"OR:class_key":"disThreadDiscussion"}
+                ]]>
+            </criteria>
+        </aggregate>
+    </object>
+    <object class="disUserIgnoreBoard" table="user_ignore_board" extends="xPDOObject">
+        <field key="internalKey" dbtype="int" precision="11" phptype="integer" attributes="unsigned" null="false" index="pk" />
+        <field key="board" dbtype="int" precision="11" phptype="integer" attributes="unsigned" null="false" index="pk" />
+
+        <index alias="primary" name="primary" primary="true" unique="true" type="BTREE">
+            <column key="internalKey" length="" collation="A" null="false" />
+            <column key="board" length="" collation="A" null="false" />
+        </index>
+
+        <aggregate alias="User" class="disUser" local="internalKey" foreign="id" cardinality="one" owner="foreign" />
+        <aggregate alias="Board" class="disBoard" local="board" foreign="id" cardinality="one" owner="foreign" />
+    </object>
+    <object class="disForum" extends="modResource">
+        <field key="class_key" dbtype="varchar" precision="100" phptype="string" default="disForum" />
+        <composite alias="Category" class="disCategory" local="id" foreign="parent" cardinality="many" owner="local">
+            <criteria target="foreign">
+                <![CDATA[
+                        {"class_key":"disCategory"}
+                ]]>
+            </criteria>
+        </composite>
+    </object>
+    <object class="disCategory" extends="modResource">
+        <field key="class_key" dbtype="varchar" precision="100" phptype="string" default="disCategory" />
+        <composite alias="Board" class="disBoard" local="id" foreign="parent" cardinality="many" owner="local">
+            <criteria target="foreign">
+                <![CDATA[
+                        {"class_key":"disBoard"}
+                ]]>
+            </criteria>
+        </composite>
+    </object>
+    <object class="disBoard" extends="modResource">
+        <field key="class_key" dbtype="varchar" precision="100" phptype="string" default="disBoard" />
+        <composite alias="Thread" class="disThread" local="id" foreign="parent" cardinality="many" owner="local">
+            <criteria target="foreign">
+                <![CDATA[
+                        {"class_key":"disThread"},
+                        {"OR:class_key":"disThreadQuestion"},
+                        {"OR:class_key":"disThreadDiscussion"}
+                ]]>
+            </criteria>
+        </composite>
+        <composite alias="Discussion" class="disThreadDiscussion" local="id" foreign="parent" cardinality="many" owner="local">
+            <criteria target="foreign">
+                <![CDATA[
+                        {"class_key":"disThreadDiscussion"}
+                ]]>
+            </criteria>
+        </composite>
+        <composite alias="Question" class="disThreadQuestion" local="id" foreign="parent" cardinality="many" owner="local">
+            <criteria target="foreign">
+                <![CDATA[
+                        {"class_key":"disThreadQuestion"}
+                ]]>
+            </criteria>
+        </composite>
+        <composite alias="Descendant" class="disBoardClosure" local="id" foreign="ancestor" cardinality="one" owner="local" />
+        <aggregate alias="Ancestor" class="disBoardClosure" local="id" foreign="descendant" cardinality="one" owner="foreign" />
+        <aggregate alias="Category" class="disCategory" local="parent" foreign="id" cardinality="many" owner="foreign">
+            <criteria target="foreign">
+                <![CDATA[
+                        {"class_key":"disCategory"}
+                ]]>
+            </criteria>
+        </aggregate>
+    </object>
+    <object class="disClosure" table="closure" extends="xPDOObject">
+        <field key="ancestor" dbtype="int" precision="11" phptype="integer" attributes="unsigned" null="false" index="pk" />
+        <field key="descendant" dbtype="int" precision="11" phptype="integer" attributes="unsigned" null="false" index="pk" />
+        <field key="depth" dbtype="tinyint" precision="3" phptype="integer" attributes="unsigned" null="false" />
+
+        <index alias="primary" name="primary" primary="true" unique="true" type="BTREE">
+            <column key="ancestor" length="" collation="A" null="false" />
+            <column key="descendant" length="" collation="A" null="false" />
+        </index>
+        <aggregate alias="Ancestor" class="disBoard" local="ancestor" foreign="id" cardinality="one" owner="foreign" />
+        <aggregate alias="Descendant" class="disBoard" local="descendant" foreign="id" cardinality="one" owner="foreign" />
+    </object>
+    <object class="disThread" extends="modResource">
+        <field key="class_key" dbtype="varchar" precision="100" phptype="string" default="disThreadDiscussion" />
+
+        <composite alias="Post" class="disPost" local="id" foreign="parent" cardinality="many" owner="local">
+            <criteria target="foreign">
+                <![CDATA[
+                        {"class_key":"disPost"}
+                ]]>
+            </criteria>
+        </composite>
+        <aggregate alias="Board" class="disBoard" local="parent" foreign="id" cardinality="one" owner="foreign">
+            <criteria target="foreign">
+                <![CDATA[
+                        {"class_key":"disBoard"}
+                ]]>
+            </criteria>
+        </aggregate>
+        <composite alias="Views" class="disThreadStatistics" local="id" foreign="id" owner="local" cardinality="one" />
+    </object>
+    <object class="disThreadQuestion" extends="disThread">
+        <field key="class_key" dbtype="varchar" precision="100" phptype="string" default="disThreadQuestion" />
+    </object>
+    <object class="disThreadDiscussion" extends="disThread">
+        <field key="class_key" dbtype="varchar" precision="100" phptype="string" default="disThreadDiscussion" />
+    </object>
+    <object class="disThreadParticipant" table="thread_participant" extends="xPDOObject">
+        <field key="thread" dbtype="int" precision="11" phptype="integer" attributes="unsigned" null="false" index="pk"  />
+        <field key="internalKey" dbtype="int" precision="11" phptype="integer" attributes="unsigned" null="false" index="pk"  />
+
+        <index alias="primary" name="primary" primary="true" unique="true" type="BTREE">
+            <column key="thread" length="" collation="A" null="false" />
+            <column key="internalKey" length="" collation="A" null="false" />
+        </index>
+
+        <aggregate alias="User" class="disUser" local="internalKey" foreign="id" cardinality="one" owner="foreign" />
+        <aggregate alias="Thread" class="disThread" local="thread" foreign="id" cardinality="one" owner="foreign">
+            <criteria target="foreign">
+                <![CDATA[
+                        {"class_key":"disThread"},
+                        {"OR:class_key":"disThreadQuestion"},
+                        {"OR:class_key":"disThreadDiscussion"}
+                ]]>
+            </criteria>
+        </aggregate>
+    </object>
+    <object class="disThreadRead" table="thread_read" extends="xPDOObject">
+        <field key="thread" dbtype="int" precision="11" phptype="integer" attributes="unsigned" null="false" index="pk"  />
+        <field key="internalKey" dbtype="int" precision="11" phptype="integer" attributes="unsigned" null="false" index="pk"  />
+        <field key="read" dbtype="tinyint" precision="1" phptype="boolean" attributes="unsigned" default="0" index="pk" />
+
+        <index alias="primary" name="primary" primary="true" unique="true" type="BTREE">
+            <column key="thread" length="" collation="A" null="false" />
+            <column key="internalKey" length="" collation="A" null="false" />
+            <column key="read" length="" collation="A" null="false" />
+        </index>
+
+    </object>
+    <object class="disPost" extends="modResource">
+        <field key="class_key" dbtype="varchar" precision="100" phptype="string" default="disPost" />
+        <composite alias="ChildPost" class="disPost" local="id" foreign="parent" cardinality="many" owner="local">
+            <criteria target="foreign">
+                <![CDATA[
+                        {"class_key":"disPost"}
+                ]]>
+            </criteria>
+        </composite>
+
+        <aggregate alias="ParentPost" class="disPost" local="parent" foreign="id" cardinality="one" owner="foreign">
+            <criteria target="foreign">
+                <![CDATA[
+                        {"class_key":"disPost"}
+                ]]>
+            </criteria>
+        </aggregate>
+        <aggregate alias="Thread" class="disThread" local="parent" foreign="id" cardinality="one" owner="foreign">
+            <criteria target="foreign">
+                <![CDATA[
+                        {"class_key":"disThread"},
+                        {"OR:class_key":"disThreadQuestion"},
+                        {"OR:class_key":"disThreadDiscussion"}
+                ]]>
+            </criteria>
+        </aggregate>
+        <composite alias="Attachments" class="disPostAttachment" local="id" foreign="post" cardinality="many" owner="local" />
+    </object>
+    <object class="disPostAttachment" table="post_attachment" extends="xPDOSimpleObject">
+        <field key="internalKey" dbtype="int" precision="11" phptype="integer" attributes="unsigned" null="false" />
+        <field key="post" dbtype="int" precision="11" phptype="integer" attributes="unsigned" null="false" />
+        <field key="filename" dbtype="varchar" precision="255" phptype="string" null="false" default="" />
+        <field key="hash" dbtype="varchar" precision="32" phptype="string" null="false" default="" />
+        <field key="extension" dbtype="varchar" precision="32" phptype="string" null="false" default="" />
+        <field key="createdon" dbtype="datetime" phptype="datetime" null="true" />
+        <field key="filesize" dbtype="int" precision="10" phptype="int" null="false" default="0" />
+        <field key="downloads" dbtype="int" precision="10" phptype="int" null="false" default="0" />
+
+        <index alias="internalKey_idx" name="internalKey_idx" primary="false" unique="false" type="BTREE">
+            <column key="internalKey" collation="A" length="" null="false" />
+        </index>
+        <index alias="post_idx" name="post_idx" primary="false" unique="false" type="BTREE">
+            <column key="post" collation="A" length="" null="false" />
+        </index>
+        <index alias="createdon_idx" name="createdon_idx" primary="false" unique="false" type="BTREE">
+            <column key="createdon" collation="A" length="" null="false" />
+        </index>
+
+        <aggregate alias="User" class="disUser" local="internalKey" foreign="id" cardinality="one" owner="foreign" />
+    </object>
+    <object class="disSubscription" table="thread_subscriptions" extends="xPDOObject">
+        <field key="thread" dbtype="int" precision="11" phptype="integer" attributes="unsigned" null="false" index="pk" />
+        <field key="user" dbtype="int" precision="11" phptype="integer" attributes="unsigned" null="false" index="pk" />
+        <index alias="PRIMARY" name="PRIMARY" primary="true" unique="true" type="BTREE">
+            <column key="thread" collaton="A" length="" null="false"/>
+            <column key="user" collation="A" length="" null="false"/>
+        </index>
+    </object>
+    <!-- log and counters -->
+    <object class="disThreadStatistics" table="thread_statistics" extends="xPDOObject">
+        <field key="idx" dbtype="int" precision="11" phptype="integer" attributes="unsigned" null="false" />
+        <field key="views" dbtype="int" precision="11" phptype="integer" attributes="unsigned" null="false" default="0" />
+        <field key="posts" dbtype="int" precision="11" phptype="integer" attributes="unsigned" null="false" default="0" />
+        <aggregate alias="Thread" class="disThread" cardinality="one" foreign="id" local="id" owner="foreign" />
+        <index alias="PRIMARY" name="PRIMARY" type="BTREE" primary="TRUE" unique="TRUE">
+            <column key="idx" collation="A" length="" null="false" />
+        </index>
+        <index alias="view_idx" unique="false" primary="false" name="view_idx" type="BTREE">
+            <column key="views" collation="A" null="false" length="" />
+        </index>
+    </object>
+    <object class="disForumActivity" table="activity" extends="xPDOSimpleObject">
+        <field key="day" dbtype="date" phptype="date" null="false" />
+        <field key="hits" dbtype="int" precision="10" phptype="integer" attributes="unsigned" null="false" default="0" />
+        <field key="topics" dbtype="int" precision="10" phptype="integer" attributes="unsigned" null="false" default="0" />
+        <field key="replies" dbtype="int" precision="10" phptype="integer" attributes="unsigned" null="false" default="0" />
+        <field key="registers" dbtype="int" precision="10" phptype="integer" attributes="unsigned" null="false" default="0" />
+        <field key="visitors" dbtype="int" precision="10" phptype="integer" attributes="unsigned" null="false" default="0" />
+
+        <index alias="day" name="day" primary="false" unique="false" type="BTREE">
+            <column key="day" length="" collation="A" null="false" />
+        </index>
+    </object>
+    <object class="disUserActivity" table="activity" extends="xPDOSimpleObject">
+        <field key="internalKey" dbtype="int" precision="11" phptype="integer" attributes="unsigned" null="false" />
+        <field key="createdon" dbtype="timestamp" phptype="timestamp" null="false" default="CURRENT_TIMESTAMP" />
+        <field key="action" dbtype="varchar" precision="255" phptype="string" null="false" />
+        <field key="data" dbtype="varchar" precision="255" phptype="json" null="false" />
+        <field key="ip" dbtype="int" phptype="int" attributes="unsigned" default="0" null="false" />
+        <index alias="createdon_idx" name="createdon_idx" primary="false" unique="false" type="BTREE">
+            <column key="createdon" collation="A" length="" null="false" />
+        </index>
+        <index alias="internalKey_idx" name="internalKey_idx" primary="false" unique="false" type="BTREE">
+            <column key="internalKey" collation="A" length="" null="false" />
+        </index>
+
+        <aggregate alias="User" class="disUser" local="internalKey" foreign="id" cardinality="one" owner="foreign" />
+    </object>
+</model>

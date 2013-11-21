@@ -1,0 +1,49 @@
+#ignore all .htaccess
+.htaccess
+
+# ignore all IIS files
+web.config
+
+# ignore all config.core.php
+config.core.php
+
+# ignore all compressed js and css
+*-min.css
+*-min.js
+
+# ignore concatenated js
+modext.js
+
+# ignore common root paths for docs and assets
+/docs/
+/assets/
+
+# ignore various IDE project files and folders
+.idea/
+.buildpath
+.project
+.settings/
+nbproject/
+
+# ignore php and txt files beginning with test in root directory
+/test*.php
+/test*.txt
+
+# ignore mac files
+.DS_Store
+
+# ignore setup config files
+setup/config.xml
+setup/config.new.xml
+setup/config.upgrade.xml
+setup/config.upgrade-advanced.xml
+
+# ignore grunt files
+bower_components
+node_modules
+.sass-cache
+_build/templates/default/sass/bourbon
+
+#ignore composer files
+composer.json
+composer.lock
