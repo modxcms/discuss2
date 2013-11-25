@@ -28,6 +28,8 @@ class newPostProcessor extends modObjectCreateProcessor {
                 $obj->save();
             }
         }
+        $cm = $this->modx->getCacheManager();
+        $cm->refresh();
     }
 }
 

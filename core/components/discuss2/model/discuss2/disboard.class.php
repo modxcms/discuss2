@@ -114,11 +114,12 @@ class disBoard extends modResource {
     }
 
     public function process() {
+        $this->xpdo->lexicon->load('discuss2:front-end');
         if (isset($_GET['action']) && in_array($_GET['action'], $this->validActions)) {
             $content = false;
             switch ($_GET['action']) {
                 case 'new/thread' :
-                    $content = $this->xpdo->discuss2->getChunk('thread.newThread');
+                    $content = $this->xpdo->discuss2->getChunk($this->xpdo->getOption('new_thread_form', $this->xpdo->discuss2->forumConfig, 'thread.newThread'));
                     break;
                 case 'remove/thread' :
                     $content = '';
@@ -225,10 +226,10 @@ class disBoard extends modResource {
                 $thread['lastpost.author_uname'] = $lastPost['username'];
                 $thread['lastpost.createdon'] = $lastPost['createdon'];
                 $thread['link'] = $this->xpdo->makeUrl($thread['id']);
-                $thread['lastpost.link'] = $this->xpdo->makeUrl($lastPost['id']);
-                $thread = array_merge($thread, $this->xpdo->discuss2->stats->getRepliesAndThreads($thread['id']));
-                if ($thread['total_posts'] > $perPage) {
-                    $thread['thread_pagination'] = $pages->processThreadPagination($thread['id'], $thread['total_posts'], 'posts_per_page');
+                $thread['lastpost.link'] = $this->xpdo->discuss2->getLastPostLink($thread['id'], $thread['lastpost.id']);
+                $thread = array_merge($thread, $this->xpdo->discuss2->stats->getRepliesAndViews($thread['id'])); // Move this to query as join already
+                if ($thread['posts'] > $perPage) {
+                    $thread['thread_pagination'] = $pages->processThreadPagination($thread['id'], $thread['posts'], 'posts_per_page');
                 }
             }
             $thread['actions'] = $this->getThreadActions($thread['id']);
@@ -242,12 +243,15 @@ class disBoard extends modResource {
     public function save($cacheFlag = null) {
         $isNew = $this->isNew();
         $this->cacheable = false;
+        $this->set('isfolder', true);
         $saved = parent::save($cacheFlag);
         if ($isNew && $saved) {
             $closure = $this->xpdo->newObject('disClosure');
             $closSaved = $closure->createClosure(intval($this->id), intval($this->parent));
             $resGroup = $this->_saveModGroup();
             $this->joinGroup($resGroup->id);
+            $cm = $this->xpdo->getCacheManager();
+            $cm->refresh();
         } else if ($saved) {
             if ($this->parentChanged !== null) {
 

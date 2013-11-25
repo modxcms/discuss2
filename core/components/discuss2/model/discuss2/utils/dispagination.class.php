@@ -16,6 +16,9 @@ class disPagination {
     public function processMainPagination($count, $perPageVar) {
         $page = isset($this->modx->request->parameters['GET']['page']) ? $this->modx->request->parameters['GET']['page'] : 1;
         $perPage = $this->discuss->forumConfig[$perPageVar];
+        if ($count < $perPage) {
+            return ;
+        }
         $pages = ceil($count / $perPage);
 
         if ($pages <= 1) {

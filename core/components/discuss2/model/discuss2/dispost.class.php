@@ -14,6 +14,8 @@ class disPost extends modResource {
 
     public function save($cacheFlag = null) {
         $isNew = $this->isNew();
+        $this->set('class_key','disPost');
+        $this->cacheable = false;
         $saved = parent::save($cacheFlag);
         if ($isNew && $saved) {
             $statsTable = $this->xpdo->getTableName('disThreadStatistics');
@@ -21,7 +23,7 @@ class disPost extends modResource {
             if (!$this->xpdo->exec($sql)) {
                 $this->xpdo->log(xPDO::LOG_LEVEL_ERROR, 'Could not update view count for thread ID ' . $this->id);
             }
-
+            $this->xpdo->cacheManager->refresh();
             $closure = $this->xpdo->newObject('disClosure');
             $closSaved = $closure->createClosure(intval($this->id), intval($this->parent));
         } else if ($saved) {

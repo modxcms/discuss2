@@ -14,7 +14,6 @@ class disForum extends modResource {
         $this->set('class_key','disForum');
         $this->set('cacheable', false);
         $this->set('isfolder', true);
-        $this->config = $this->xpdo->discuss2->forumConfig;
     }
 
     public static function getControllerPath(xPDO &$modx) {
@@ -152,16 +151,18 @@ class disForum extends modResource {
             'lastpost_title' => 'Post.thread_title',
             'lastpost_thread_id' => 'Post.thread_id',
             'lastpost_parent' => 'Post.thread_parent',
-            'lastpost_class_key' => 'Post.thread_class_key'
+            'lastpost_class_key' => 'Post.thread_class_key',
+            'lastpost_when' => 'Post.createdon'
         ));
         $c->leftJoin('disBoard', 'Board', "{$this->xpdo->escape('Board')}.{$this->xpdo->escape('parent')} = {$this->xpdo->escape('disCategory')}.{$this->xpdo->escape('id')}");
 
         $lastPostQ = $this->xpdo->newQuery('disPost');
         $lastPostQ->select(array(
             'title' => 'disPost.pagetitle',
-            'content' => 'disPost.content',
+            'content' => 'SUBSTRING(disPost.content, 1, '.$this->xpdo->getOption('post_excerpt', $this->xpdo->discuss2->forumConfig, 100).')',
             'id' => 'disPost.id',
             'author' => 'disPost.createdby',
+            'createdon' => 'disPost.createdon',
             'username' => 'disUser.username',
             'thread_title' => 'disThread.pagetitle',
             'thread_parent' => 'disThread.parent',
@@ -172,12 +173,11 @@ class disForum extends modResource {
         $lastPostQ->innerJoin('disUser', 'disUser', "{$this->xpdo->escape('disUser')}.{$this->xpdo->escape('id')} = {$this->xpdo->escape('disPost')}.{$this->xpdo->escape('createdby')}");
         $lastPostQ->where(array(
             'class_key' => 'disPost',
-            "{$this->xpdo->escape('disPost')}.{$this->xpdo->escape('createdon')} = (SELECT MAX({$this->xpdo->escape('subPost')}.{$this->xpdo->escape('createdon')}) FROM {$this->xpdo->getTableName('disPost')} {$this->xpdo->escape('subPost')}
+            "{$this->xpdo->escape('disPost')}.{$this->xpdo->escape('id')} = (SELECT MAX({$this->xpdo->escape('subPost')}.{$this->xpdo->escape('id')}) FROM {$this->xpdo->getTableName('disPost')} {$this->xpdo->escape('subPost')}
                 WHERE {$this->xpdo->escape('subPost')}.{$this->xpdo->escape('parent')} = {$this->xpdo->escape('disThread')}.{$this->xpdo->escape('id')})"
         ));
-        $lastPostQ->groupby('disPost.parent');
         $lastPostQ->sortby('disPost.createdon', 'DESC');
-
+        $lastPostQ->limit(1);
         $lastPostQ->prepare();
         $c->query['from']['joins'][] = array(
             'type' => xPDOQuery::SQL_JOIN_LEFT,
@@ -211,17 +211,27 @@ class disForum extends modResource {
         reset($hydrated);
         $categories = $this->xpdo->discuss2->createTree($hydrated);
         $categories = $this->_treeToView($categories);
-        $this->xpdo->setPlaceholder('discuss2.content', implode("\n",$categories));
+        $this->xpdo->setPlaceholder('discuss2.content', $categories);
     }
 
     private function _treeToView($tree) {
-        $categoryRow = $this->xpdo->getOption('categoryRow', $this->config, 'forum.categoryRow');
-        $boardRow = $this->xpdo->getOption('boardRow', $this->config, 'forum.boardRow');
+        $catsContainer =  $this->xpdo->getOption('categories_container', $this->xpdo->discuss2->forumConfig, 'category.categoriesContainer');
+        $catChunk =  $this->xpdo->getOption('categories_category_chunk', $this->xpdo->discuss2->forumConfig, 'category.categoryChunk');
+        $boardChunk =  $this->xpdo->getOption('categories_board_row', $this->xpdo->discuss2->forumConfig, 'category.boardRow');
+        //$subboardChunk =  $this->xpdo->getOption('categories_subboard_row', $this->xpdo->discuss2->forumConfig, 'category.subboard_row');
+
         $categories = array();
         foreach ($tree as $category) {
             $boards = array();
             if (!empty($category['disBoard'])) {
                 foreach($category['disBoard'] as $board) {
+                    if (!empty($board['disThreadDiscussion'])) {
+                        $board['disThread'] = $board['disThreadDiscussion'];
+                        unset($board['disThreadDiscussion']);
+                    } else if (!empty($board['disThreadQuestion'])) {
+                        $board['disThread'] = $board['disThreadQuestion'];
+                        unset($board['disThreadQuestion']);
+                    }
                     if (!empty($board['disThread'])) {
                         $lastPost = reset($board['disThread']);
                         unset($board['disThread']);
@@ -231,18 +241,21 @@ class disForum extends modResource {
                         $board['lastpost.author_id'] = $lastPost['author'];
                         $board['lastpost.author_uname'] = $lastPost['username'];
                         $board['lastpost.thread_title'] = $lastPost['title'];
-                        $board['lastpost.link'] = $this->xpdo->makeUrl($lastPost['thread_id']);
+                        $board['lastpost.link'] = $this->xpdo->discuss2->getLastPostLink($board['id'], $board['lastpost.id']);
+                        $board['lastpost.createdon'] = $lastPost['when'];
                     }
+
                     $board['link'] = $this->xpdo->makeUrl($board['id']);
                     $board = array_merge($board, $this->xpdo->discuss2->stats->getRepliesAndThreads($board['id']));
-                    $boards[] = $this->xpdo->discuss2->getChunk($boardRow,$board);
+                    $boards[] = $this->xpdo->discuss2->getChunk($boardChunk,$board);
                 }
-            };
-            $category['link'] = $this->xpdo->makeUrl($category['id']);
-            $categories[] = $this->xpdo->discuss2->getChunk($categoryRow,array_merge($category, array('boards' => implode("\n", $boards))));
-        }
+            }
 
-        return $categories;
+            $category['link'] = $this->xpdo->makeUrl($category['id']);
+            $categories[] = $this->xpdo->discuss2->getChunk($catChunk,array_merge($category, array('boards' => implode("\n", $boards))));
+        }
+        $catOut = $this->xpdo->discuss2->getChunk($catsContainer, array('categories' => implode("\n", $categories)));
+        return $catOut;
     }
 
     public function set($k, $v= null, $vType= '') {
@@ -255,6 +268,7 @@ class disForum extends modResource {
     public function save($cacheFlag = null) {
         $isNew = $this->isNew();
         $this->cacheable = false;
+        $this->set('isfolder', true);
         $saved = parent::save($cacheFlag);
         if ($isNew && $saved) {
             $closure = $this->xpdo->newObject('disClosure');

@@ -25,6 +25,7 @@ class disForumCreateManagerController extends ResourceCreateManagerController {
             MODx.load({
                 xtype: "discuss2-page-forum"
                 ,resource: "'.$this->resource->get('id').'"
+                ,record : '.$this->modx->toJSON($this->resourceArray).'
                 ,publish_document: "'.$this->canPublish.'"
                 ,preview_url: "'.$this->previewUrl.'"
                 ,locked: '.($this->locked ? 1 : 0).'

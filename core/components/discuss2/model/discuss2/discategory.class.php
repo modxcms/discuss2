@@ -210,6 +210,7 @@ class disCategory extends modResource {
     public function save($cacheFlag = null) {
         $isNew = $this->isNew();
         $this->cacheable = false;
+        $this->set('isfolder', true);
         $saved = parent::save($cacheFlag);
         if ($isNew && $saved) {
             $closure = $this->xpdo->newObject('disClosure');

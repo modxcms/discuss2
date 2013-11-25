@@ -222,10 +222,13 @@ class Discuss2 {
         if (!$config = $this->modx->getCacheManager()->get("discuss2/configurations/{$configToLoad['class_key']}/{$configToLoad['class_key']}-{{$configToLoad['id']}}")) {
             $properties = $this->getMergeConfig($this->modx->resource->id);
 
-            $this->forumConfig = $this->modx->fromJSON($properties);
+            $this->forumConfig = $properties;
             $this->writeConfig($properties, $configToLoad['class_key'], $configToLoad['id']);
         }  else {
-            $this->forumConfig = $this->modx->fromJSON($config);
+            if (!is_array($config)) {
+                $this->forumConfig = $this->modx->fromJSON($config);
+            }
+            $this->forumConfig = $config;
         }
 
         return $this->forumConfig;

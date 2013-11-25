@@ -43,6 +43,8 @@ class newThreadProcessor extends modObjectCreateProcessor {
                 ));
                 $obj->save();
             }
+        } else {
+
         }
 
         $this->object->set('post_id', $post->id);

@@ -8,7 +8,6 @@
 
 
 <div id="dis-new-thread-preview"></div>
-<br />
 <form action="[[~[[*id]]]]&action=new/thread" method="post" class="dis-form" id="dis-new-thread-form" enctype="multipart/form-data">
 
     <h2>[[%discuss.start_new_thread? &namespace=`discuss` &topic=`post`]]</h2>

@@ -135,6 +135,9 @@ class disThread extends modResource {
 
     private function _treeToView($tree) {
         $posts = array();
+        $postContainer = $this->xpdo->getOption('thread_posts_container', $this->xpdo->discuss2->forumConfig, 'thread.postsContainer');
+        $postRow = $this->xpdo->getOption('thread_post_chunk', $this->xpdo->discuss2->forumConfig, 'board.threadrow');
+
         $parser = $this->xpdo->discuss2->loadParser();
         foreach ($tree as &$post) {
             $post['content'] = $parser->parse($post['content']);
@@ -148,10 +151,10 @@ class disThread extends modResource {
         foreach ($tree as $post) {
             $post['user'] = $userids[$post['createdby']];
             $post['actions'] = $this->_getPostActions($post['createdby'], $post['id']);
-            $posts[] = $this->xpdo->discuss2->getChunk('thread.postRow', $post);
+            $posts[] = $this->xpdo->discuss2->getChunk($postRow, $post);
         }
         if (!empty($posts)) {
-            return $this->xpdo->discuss2->getChunk('thread.postsContainer', array('posts' => implode("\n", $posts)));
+            return $this->xpdo->discuss2->getChunk($postContainer, array('posts' => implode("\n", $posts)));
         }
 
     }
@@ -159,6 +162,7 @@ class disThread extends modResource {
     public function save($cacheFlag = null) {
         $isNew = $this->isNew();
         $this->cacheable = false;
+        $this->set('isfolder', true);
         $saved = parent::save($cacheFlag);
         if ($isNew && $saved) {
             $threadStat = $this->xpdo->newObject('disThreadStatistics');
@@ -168,7 +172,7 @@ class disThread extends modResource {
                 'views' => 0
             ));
             $threadStat->save();
-
+            $this->xpdo->cacheManager->refresh();
             $closure = $this->xpdo->newObject('disClosure');
             $closSaved = $closure->createClosure(intval($this->id), intval($this->parent));
         } else if ($saved) {
@@ -179,8 +183,6 @@ class disThread extends modResource {
         return $saved;
     }
 
-    public function remove() {
-        parent::remove();
-    }
+    public function remove() {}
 
 }
