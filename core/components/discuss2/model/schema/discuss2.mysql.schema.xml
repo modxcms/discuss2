@@ -192,7 +192,7 @@
                 ]]>
             </criteria>
         </aggregate>
-        <composite alias="Views" class="disThreadStatistics" local="id" foreign="id" owner="local" cardinality="one" />
+        <composite alias="Views" class="disThreadProperty" local="id" foreign="id" owner="local" cardinality="one" />
     </object>
     <object class="disThreadQuestion" extends="disThread">
         <field key="class_key" dbtype="varchar" precision="100" phptype="string" default="disThreadQuestion" />
@@ -291,16 +291,28 @@
         </index>
     </object>
     <!-- log and counters -->
-    <object class="disThreadStatistics" table="thread_statistics" extends="xPDOObject">
+    <object class="disThreadProperty" table="thread_properties" extends="xPDOObject">
         <field key="idx" dbtype="int" precision="11" phptype="integer" attributes="unsigned" null="false" />
         <field key="views" dbtype="int" precision="11" phptype="integer" attributes="unsigned" null="false" default="0" />
         <field key="posts" dbtype="int" precision="11" phptype="integer" attributes="unsigned" null="false" default="0" />
+        <field key="answered" dbtype="int" precision="11" phptype="integer" attributes="unsigned" null="false" default="0" />
+        <field key="sticky" dbtype="tinyint" precision="1" phptype="integer" attributes="unsigned" null="false" default="0" />
+        <field key="locked" dbtype="tinyint" precision="1" phptype="integer" attributes="unsigned" null="false" default="0" />
         <aggregate alias="Thread" class="disThread" cardinality="one" foreign="id" local="id" owner="foreign" />
         <index alias="PRIMARY" name="PRIMARY" type="BTREE" primary="TRUE" unique="TRUE">
             <column key="idx" collation="A" length="" null="false" />
         </index>
         <index alias="view_idx" unique="false" primary="false" name="view_idx" type="BTREE">
             <column key="views" collation="A" null="false" length="" />
+        </index>
+        <index alias="locked" name="locked_idx" type="BTREE" primary="false" unique="false">
+            <column key="locked" collation="A" length="" null="false" />
+        </index>
+        <index alias="sticky" name="sticky_idx" type="BTREE" primary="false" unique="false">
+            <column key="sticky" collation="A" length="" null="false" />
+        </index>
+        <index alias="answered" name="answered_idx" type="BTREE" primary="false" unique="false">
+            <column key="answered" collation="A" length="" null="false" />
         </index>
     </object>
     <object class="disForumActivity" table="activity" extends="xPDOSimpleObject">

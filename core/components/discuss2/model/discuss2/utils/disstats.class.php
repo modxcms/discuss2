@@ -67,8 +67,8 @@ class disStats {
     }
 
     public function getRepliesAndViews($id) {
-        $c = $this->modx->newQuery('disThreadStatistics');
-        $c->select(array($this->modx->getSelectColumns('disThreadStatistics', '', '', array('views', 'posts'))));
+        $c = $this->modx->newQuery('disThreadProperty');
+        $c->select(array($this->modx->getSelectColumns('disThreadProperty', '', '', array('views', 'posts'))));
         $c->where(array('idx'=> $id));
         $c->prepare();
         $c->stmt->execute();

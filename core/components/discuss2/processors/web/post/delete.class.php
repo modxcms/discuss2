@@ -1,6 +1,6 @@
 <?php
 
-class deletePostProcessor extends modObjectRemoveProcessor {
+class deletePostProcessor extends modObjectUpdateProcessor {
     public $classKey = 'disPost';
     public $permission = 'discuss2.remove_post';
 
@@ -31,27 +31,22 @@ class deletePostProcessor extends modObjectRemoveProcessor {
         if ($canRemove !== true) {
             return $this->failure($canRemove);
         }
-        $preventRemoval = $this->fireBeforeRemoveEvent();
-        if (!empty($preventRemoval)) {
-            return $this->failure($preventRemoval);
-        }
+
         $this->object->deleted = 1;
         $this->object->published = 0;
         $this->object->save();
 
         $this->afterRemove();
-        $this->fireAfterRemoveEvent();
-        $this->logManagerAction();
         $this->cleanup();
         return $this->success('',array($this->primaryKeyField => $this->object->get($this->primaryKeyField)));
     }
 
     public function afterRemove() {
         if ($this->thread !== null) {
-            $count = $this->modx->getCount('disThread', array('parent' => $this->thread->id));
+            $count = $this->modx->getCount('disThread', array('parent' => $this->thread->id, 'deleted' => 0));
             if ($count == 0) {
                 $this->thread->published = 0;
-                $this->thread->delete = 1;
+                $this->thread->deleted = 1;
                 $this->thread->save();
             }
         }

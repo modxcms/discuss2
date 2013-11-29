@@ -38,6 +38,14 @@ $xpdo_meta_map['disPost']= array (
         ),
       ),
     ),
+    'Attachments' => 
+    array (
+      'class' => 'disPostAttachment',
+      'local' => 'id',
+      'foreign' => 'post',
+      'cardinality' => 'many',
+      'owner' => 'local',
+    ),
   ),
   'aggregates' => 
   array (

@@ -15,7 +15,7 @@ $xpdo_meta_map = array (
     5 => 'disThreadParticipant',
     6 => 'disThreadRead',
     7 => 'disSubscription',
-    8 => 'disThreadStatistics',
+    8 => 'disThreadProperty',
   ),
   'modResource' => 
   array (

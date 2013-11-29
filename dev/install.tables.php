@@ -26,5 +26,5 @@ $m->createObjectContainer('disThreadRead');
 $m->createObjectContainer('disPostAttachment');
 $m->createObjectContainer('disForumActivity');
 $m->createObjectContainer('disUserActivity');
-$m->createObjectContainer('disThreadStatistics');
+$m->createObjectContainer('disThreadProperty');
 $m->createObjectContainer('disSubscription');

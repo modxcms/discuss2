@@ -179,7 +179,7 @@ class Discuss2 {
     }
 
     public function getLastPostLink($threadId, $postId) {
-        $posts = $this->modx->getObject('disThreadStatistics', $threadId);
+        $posts = $this->modx->getObject('disThreadProperty', $threadId);
         if ($posts instanceof xPDOObject) {
             $perPage = $this->forumConfig['posts_per_page'];
             if ($posts->posts <= $perPage) {

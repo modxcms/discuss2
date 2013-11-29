@@ -18,7 +18,7 @@ class disPost extends modResource {
         $this->cacheable = false;
         $saved = parent::save($cacheFlag);
         if ($isNew && $saved) {
-            $statsTable = $this->xpdo->getTableName('disThreadStatistics');
+            $statsTable = $this->xpdo->getTableName('disThreadProperty');
             $sql = "UPDATE {$statsTable} SET {$this->xpdo->escape('posts')} = ({$this->xpdo->escape('posts')} + 1) WHERE {$this->xpdo->escape('idx')} = {$this->parent}";
             if (!$this->xpdo->exec($sql)) {
                 $this->xpdo->log(xPDO::LOG_LEVEL_ERROR, 'Could not update view count for thread ID ' . $this->id);
@@ -52,7 +52,7 @@ class disPost extends modResource {
                 $criteria->stmt->exec();
                 $this->thread->remove();
             } else {
-                $statsTable = $this->xpdo->getTableName('disThreadStatistics');
+                $statsTable = $this->xpdo->getTableName('disThreadProperty');
                 $sql = "UPDATE {$statsTable} SET {$this->xpdo->escape('posts')} = ({$this->xpdo->escape('posts')} - 1) WHERE {$this->xpdo->escape('idx')} = {$this->thread->id}";
                 if (!$this->xpdo->exec($sql)) {
                     $this->xpdo->log(xPDO::LOG_LEVEL_ERROR, 'Could not update view count for thread ID ' . $this->id);

@@ -5,10 +5,13 @@
  */
 class disThread extends modResource {
     public $showInContextMenu = false;
-    private $validActions = array(
-        'new',
-        'remove',
-        'edit'
+    public $actionsLink = array();
+
+    public $validActions = array(
+        'modify/post',
+        'remove/post',
+        'lock/thread',
+        'pin/thread'
     );
 
     function __construct(xPDO & $xpdo) {
@@ -22,13 +25,48 @@ class disThread extends modResource {
 
 
     public function process() {
-        $this->_getContent();
-        if (isset($this->xpdo->resource) && $this->xpdo->resource->id == $this->id) {
-            $statsTable = $this->xpdo->getTableName('disThreadStatistics');
-            $sql = "UPDATE {$statsTable} SET {$this->xpdo->escape('views')} = ({$this->xpdo->escape('views')} + 1) WHERE {$this->xpdo->escape('idx')} = {$this->id}";
-            if (!$this->xpdo->exec($sql)) {
-                $this->xpdo->log(xPDO::LOG_LEVEL_ERROR, 'Could not update view count for thread ID ' . $this->id);
+        $this->xpdo->lexicon->load('discuss2:front-end');
+        if (isset($_GET['action']) && in_array($_GET['action'], $this->validActions)) {
+            $contentChunk = false;
+            $placeholders = array();
+            switch ($_GET['action']) {
+                case 'new/post' :
+                    $contentChunk = $this->xpdo->getOption('new_post_form', $this->xpdo->discuss2->forumConfig, 'post.newPost');
+                    break;
+                case 'remove/post' :
+                    if (!isset($this->xpdo->request->parameters['GET']['pid'])) {
+                        break;
+                    }
+
+                    $contentChunk = $this->xpdo->getOption('remove_post_form', $this->xpdo->discuss2->forumConfig, 'post.removePost');
+                    break;
+                case 'modify/post' :
+                    if (!isset($this->xpdo->request->parameters['GET']['pid'])) {
+                        break;
+                    }
+                    $obj = $this->xpdo->getObject('disPost', $this->xpdo->request->parameters['GET']['pid']);
+                    $contentChunk = $this->xpdo->getOption('edit_post_form', $this->xpdo->discuss2->forumConfig, 'post.editPost');
+                    $placeholders = array(
+                        'params'  => $this->xpdo->request->parameters,
+                        'thread' => $obj->toArray(),
+                        'action' => $this->xpdo->makeUrl($this->xpdo->resource->id, '', array('action' => 'modify/post', 'pid' => $this->xpdo->request->parameters['GET']['pid']))
+                    );
+                    break;
             }
+            if ($contentChunk != false) {
+                $content = $this->xpdo->discuss2->getChunk($contentChunk, $placeholders);
+                $this->xpdo->setPlaceholder('discuss2.content', $content);
+            }
+        } else {
+            if (isset($this->xpdo->resource) && $this->xpdo->resource->id == $this->id) {
+                $statsTable = $this->xpdo->getTableName('disThreadProperty');
+                $sql = "UPDATE {$statsTable} SET {$this->xpdo->escape('views')} = ({$this->xpdo->escape('views')} + 1) WHERE {$this->xpdo->escape('idx')} = {$this->id}";
+                if (!$this->xpdo->exec($sql)) {
+                    $this->xpdo->log(xPDO::LOG_LEVEL_ERROR, 'Could not update view count for thread ID ' . $this->id);
+                }
+            }
+            //$this->getGlobalActions();
+            $this->_getContent();
         }
         return parent::process();
     }
@@ -46,7 +84,8 @@ class disThread extends modResource {
         ));
         $c->leftJoin('disPost', 'postReplies', "{$this->xpdo->escape('postReplies')}.{$this->xpdo->escape('parent')} = {$this->xpdo->escape('Post')}.{$this->xpdo->escape('id')}");
         $c->where(array(
-            'Post.parent' => $this->id
+            'Post.parent' => $this->id,
+            'Post.deleted' => 0
         ));
         $c->sortby('Post.id', 'ASC');
         $count = $this->xpdo->getCount('disPost', $c);
@@ -75,68 +114,58 @@ class disThread extends modResource {
         if ($this->xpdo->hasPermission('discuss2.can_post')) {
             $this->xpdo->setPlaceholder('discuss2.form', $this->xpdo->discuss2->getChunk('post.newPost'));
         }
-        $this->xpdo->setPlaceholder('discuss2.thread_actions', $this->_getThreadActions($this->createdby));
+        //$this->xpdo->setPlaceholder('discuss2.thread_actions', $this->_getThreadActions($this->createdby));
         $this->xpdo->setPlaceholder('discuss2.content', $posts);
     }
 
-    private function _getThreadActions($authorId) {
-        $u = $this->xpdo->discuss2->getUser();
-        $actions = array(
-            'discuss2.lock_thread',
-            'discuss2.merge_thread',
-            'discuss2.modify_thread',
-            'discuss2.remove_thread',
-            'discuss2.split_thread',
-            'discuss2.stick_thread'
-        );
-        $threadActionsContainer = $this->xpdo->getOption('threadActionsContainer', $this->xpdo->discuss2->forumConfig, 'thread.ActionsContainer');
-        $threadActionButton = $this->xpdo->getOption('threadActionChunk', $this->xpdo->discuss2->forumConfig, 'thread.Action');
-        $buttons = array();
-        foreach ($actions as $action) {
-            if ($this->xpdo->hasPermission($action) || $u->sudo == true) {
-                $buttons[$action] = $this->xpdo->discuss2->getChunk($threadActionButton, array(
-                    'text' => $action,
-                    'link' => $this->xpdo->makeUrl($this->id, '', array('action' => 'thread/' . $action))  ,
-                    'action' => 'thread/'. $action
-                ));
-            }
+    public function getThreadActions($thread) {
+        $x = &$this->xpdo;
+        $actionChunk = $x->getOption('thread_actions_item', $x->discuss->forumConfig, 'thread.actionsItem');
+        if ($x->hasPermission('discuss2.remove_thread')) {
+            $this->actionLinks['actions.remove_thread'] = $x->discuss2->getChunk($actionChunk, array(
+                'link' => $x->makeUrl($this->id, '', array('action' => 'remove/thread', 'tid' => $thread)),
+                'text' => $x->lexicon('discuss2.remove_thread')));
         }
-        return $this->xpdo->discuss2->getChunk($threadActionsContainer, array('actions' => implode("\n", $buttons)));
+        if ($x->hasPermission('discuss2.lock_thread')) {
+            $this->actionLinks['actions.lock_thread'] = $x->discuss2->getChunk($actionChunk, array(
+                'link' => $x->makeUrl($this->id, '', array('action' => 'lock/thread', 'tid' => $thread)),
+                'text' => $x->lexicon('discuss2.lock_thread')));
+        }
+        if ($x->hasPermission('discuss2.modify_thread')) {
+            $this->actionLinks['actions.modify_thread'] = $x->discuss2->getChunk($actionChunk, array(
+                'link' => $x->makeUrl($this->id, '', array('action' => 'modify/thread', 'tid' => $thread)),
+                'text' => $x->lexicon('discuss2.edit_thread')));
+        }
+        if ($x->hasPermission('discuss2.stick_thread')) {
+            $this->actionLinks['actions.stick_thread'] = $x->discuss2->getChunk($actionChunk, array(
+                'link' => $x->makeUrl($this->id, '', array('action' => 'pin/thread', 'tid' => $thread)),
+                'text' => $x->lexicon('discuss2.pin_thread')));
+        }
+        return $this->actionLinks;
     }
-    private function _getPostActions($authorId, $postId) {
-        $u = $this->xpdo->discuss2->getUser();
-        $actions = array(
-            'discuss2.ban',
-            'discuss2.modify_post',
-            'discuss2.remove_post'
-        );
-        $postActionsContainer = $this->xpdo->getOption('postActionsContainer', $this->xpdo->discuss2->forumConfig, 'post.postActionsContainer');
-        $postActionButton = $this->xpdo->getOption('postActionChunk', $this->xpdo->discuss2->forumConfig, 'post.postAction');
-        $buttons = array();
-        foreach ($actions as $action) {
-            if ($this->xpdo->hasPermission($action) || $u->sudo == true) {
-                $buttons[$action] = $this->xpdo->discuss2->getChunk($postActionButton, array(
-                    'text' => $action,
-                    'link' => $this->xpdo->makeUrl($this->id, '', array('action' => 'post/' . $action, 'pid' => $postId))  ,
-                    'action' => 'post/'. $action,
-                    'action-id' => $postId
-                ));
-            }
+
+    public function getPostActions($userId, $postId) {
+        $x = &$this->xpdo;
+        $links = array();
+        $actionChunk = $x->getOption('post_actions_item', $x->discuss->forumConfig, 'post.actionsItem');
+        if ($x->hasPermission('discuss2.remove_post')) {
+            $links['actions.remove_post'] = $x->discuss2->getChunk($actionChunk, array(
+                'link' => $x->makeUrl($this->id, '', array('action' => 'remove/post', 'pid' => $postId)),
+                'text' => $x->lexicon('discuss2.remove_post')));
         }
-        if ($authorId == $u->id) {
-            $buttons['discuss2.modify_post'] = $this->xpdo->discuss2->getChunk($postActionButton, array(
-                'text' => 'discuss2.modify_post',
-                'link' => $this->xpdo->makeUrl($this->id, '', array('action' => 'post/' . 'discuss2.modify_post'))  ,
-                'action' => 'post/'. 'discuss2.modify_post'
-            ));
+        if ($x->hasPermission('discuss2.modify_post') || $userId == $this->xpdo->user->id) {
+            $links['actions.modify_post'] = $x->discuss2->getChunk($actionChunk, array(
+                'link' => $x->makeUrl($this->id, '', array('action' => 'modify/post', 'pid' => $postId)),
+                'text' => $x->lexicon('discuss2.edit_post')));
         }
-        return $this->xpdo->discuss2->getChunk($postActionsContainer, array('actions' => implode($buttons)));
+        return $links;
     }
 
     private function _treeToView($tree) {
         $posts = array();
         $postContainer = $this->xpdo->getOption('thread_posts_container', $this->xpdo->discuss2->forumConfig, 'thread.postsContainer');
         $postRow = $this->xpdo->getOption('thread_post_chunk', $this->xpdo->discuss2->forumConfig, 'board.threadrow');
+        $actionsContainer = $this->xpdo->getOption('post_actions_container', $this->xpdo->discuss2->forumConfig, 'post.actionsContainer');
 
         $parser = $this->xpdo->discuss2->loadParser();
         foreach ($tree as &$post) {
@@ -150,7 +179,7 @@ class disThread extends modResource {
         }
         foreach ($tree as $post) {
             $post['user'] = $userids[$post['createdby']];
-            $post['actions'] = $this->_getPostActions($post['createdby'], $post['id']);
+            $post['actions'] = $this->xpdo->getChunk($actionsContainer, array('actions' => implode("", $this->getPostActions($post['createdby'], $post['id']))));
             $posts[] = $this->xpdo->discuss2->getChunk($postRow, $post);
         }
         if (!empty($posts)) {
@@ -165,7 +194,7 @@ class disThread extends modResource {
         $this->set('isfolder', true);
         $saved = parent::save($cacheFlag);
         if ($isNew && $saved) {
-            $threadStat = $this->xpdo->newObject('disThreadStatistics');
+            $threadStat = $this->xpdo->newObject('disThreadProperty');
             $threadStat->fromArray(array(
                 'idx' => $this->id,
                 'posts' => 0,

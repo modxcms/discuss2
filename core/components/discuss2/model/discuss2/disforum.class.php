@@ -221,6 +221,7 @@ class disForum extends modResource {
         //$subboardChunk =  $this->xpdo->getOption('categories_subboard_row', $this->xpdo->discuss2->forumConfig, 'category.subboard_row');
 
         $categories = array();
+        $parser = $this->xpdo->discuss2->loadParser();
         foreach ($tree as $category) {
             $boards = array();
             if (!empty($category['disBoard'])) {
@@ -236,7 +237,7 @@ class disForum extends modResource {
                         $lastPost = reset($board['disThread']);
                         unset($board['disThread']);
                         $board['lastpost.title'] = $lastPost['post_title'];
-                        $board['lastpost.content'] = $lastPost['content'];
+                        $board['lastpost.content']  = $parser->parse($lastPost['content'] );
                         $board['lastpost.id'] = $lastPost['id'];
                         $board['lastpost.author_id'] = $lastPost['author'];
                         $board['lastpost.author_uname'] = $lastPost['username'];

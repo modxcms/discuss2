@@ -98,19 +98,22 @@ class disPagination {
             if (is_array($link)) {
                 if ($link['target'] == null) {
                     $temp[] = $this->discuss->getChunk($emptyitem, array(
-                        'text' => $link['text']
+                        'text' => $link['text'],
+                        'class' => 'empty'
                     ));
                 } else {
                     $temp[] = $this->discuss->getChunk($item, array(
                         'link' => $this->modx->makeUrl($resourceId, '', array($pageVar => $link['target'])),
-                        'text' => $link['text']
+                        'text' => $link['text'],
+                        'class' => $link['class']
                     ));
                 }
 
             } else {
-                $temp[] = $this->discuss->getChunk('pagination.item', array(
+                $temp[] = $this->discuss->getChunk($item, array(
                     'link' => $this->modx->makeUrl($resourceId, '', array($pageVar => $link)),
-                    'text' => $link
+                    'text' => $link,
+                    'class' => 'pagination-item'
                 ));
             }
         }
