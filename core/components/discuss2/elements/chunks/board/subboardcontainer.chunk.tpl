@@ -1,3 +1,3 @@
 <ul id="subboards">
-    [[+subboards]]
+    [[+boards]]
 </ul>

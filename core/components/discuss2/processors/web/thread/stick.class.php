@@ -2,7 +2,7 @@
 
 class stickThreadProcessor extends modObjectUpdateProcessor {
     public $classKey = 'disThread';
-    public $permission = 'discuss2.lock_thread';
+    public $permission = 'discuss2.stick_thread';
     public $primaryKeyField = 'id';
 
     public function initialize() {

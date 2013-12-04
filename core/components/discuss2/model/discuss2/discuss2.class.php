@@ -70,25 +70,11 @@ class Discuss2 {
         return $conditions;
     }
 
-    /** Deprecated,
-     * User getMergeConfig */
-    public function getResourceForum($resourceId) {
-        $c = $this->modx->newQuery('disForum');
-        $c->innerJoin('disClosure', 'c', "disForum.id = c.ancestor AND c.descendant = {$this->modx->quote($resourceId)}");
-        $c->where(array('class_key' => 'disForum'));
-        $c->prepare();
-        $obj = $this->modx->getObject('disForum', $c);
-        if (!$obj instanceof disForum) {
-            $this->modx->log(xPDO::LOG_LEVEL_ERROR, 'Could not fetch Discuss2 forum resource for resource id : ' . $resourceId);
-        }
-        return $obj;
-    }
-
     public function closestConfigParent($resourceId) {
         $c = $this->modx->newQuery('disForum');
         $c->select(array('id', 'class_key'));
         $c->innerJoin('disClosure', 'c', "disForum.id = c.ancestor AND c.descendant = {$resourceId}");
-        $c->where(array('class_key' => 'disBoard'));
+        $c->where(array('class_key:IN' => array('disBoard', 'disCategory', 'disForum')));
         $c->limit(1);
         $c->prepare();
         $c->stmt->execute();

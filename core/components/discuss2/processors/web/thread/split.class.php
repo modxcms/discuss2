@@ -35,6 +35,7 @@ class splitThreadProcessor extends modObjectUpdateProcessor {
         ));
         $obj = $response->getObject();
         $this->object->properties['split_to']  = $obj['post_id'];
+        $this->object->properties['thread_to']  = $obj['id'];
         $this->object->save();
         $this->object->set('post_id', $obj['post_id']);
         $this->cleanup();

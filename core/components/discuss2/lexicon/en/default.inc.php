@@ -197,6 +197,7 @@ $_lang['discuss2.post_actions_container_desc'] = 'Post actions links/buttons con
 $_lang['discuss2.post_actions_item'] = 'Post Action Item';
 $_lang['discuss2.post_actions_item_desc'] = 'Item chunk for post actions';
 
+
 // Search
 $_lang['discuss2.search'] = 'Search';
 $_lang['discuss2.use_discuss_search'] = 'Use Discuss2 Search';
@@ -211,11 +212,18 @@ $_lang['discuss2.search_engine_sphinx'] = 'Discuss2 Sphinx Search';
 $_lang['discuss2.search_engine_sphinx_value'] = 'disSearchSphinx';
 
 // Categories
-$_lang['discuss2.category_chunks'] = 'Category Chunks';
-$_lang['discuss2.categories_container'] = 'Categories container chunk';
-$_lang['discuss2.categories_category_chunk'] = 'Category row chunk';
-$_lang['discuss2.categories_board_row'] = 'Board row chunk';
-$_lang['discuss2.categories_subboard_row'] = 'Sub board item chunk';
+
+//Category Chunks
+$_lang['discuss2.categories_container'] = 'Categories Container Chunk';
+$_lang['discuss2.categories_container_desc'] = 'Categories container chunk. This holds all categories and their board chunks.';
+$_lang['discuss2.categories_category_chunk'] = 'Category Row Chunk';
+$_lang['discuss2.categories_category_chunk_desc'] = 'Category row chunk. Chunk holds all boards that are children to it.';
+$_lang['discuss2.categories_board_row'] = 'Board Row Chunk';
+$_lang['discuss2.categories_board_row_desc'] = 'Board row chunk. Chunk also holds last post details and sub boards if there are any.';
+$_lang['discuss2.categories_subboard_container'] = 'Sub Board Container Chunk';
+$_lang['discuss2.categories_subboard_container_desc'] = 'Holds sub board row items. Items are the children of parent board.';
+$_lang['discuss2.categories_subboard_row'] = 'Sub Board Row';
+$_lang['discuss2.categories_subboard_row_desc'] = 'Sub board row item. Holds only information directly related to sub board.';
 
 // Boards
 $_lang['discuss2.boards'] = 'Boards';

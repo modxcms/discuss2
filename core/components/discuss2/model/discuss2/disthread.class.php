@@ -80,19 +80,35 @@ class disThread extends modResource {
         $c->setClassAlias('Post');
         $c->select(array(
             $this->xpdo->getSelectColumns('disPost', 'Post', 'Post_', $fieldsToLoad),
-            $this->xpdo->getSelectColumns('disPost', 'postReplies', 'postReplies_', $fieldsToLoad),
         ));
-        $c->leftJoin('disPost', 'postReplies', "{$this->xpdo->escape('postReplies')}.{$this->xpdo->escape('parent')} = {$this->xpdo->escape('Post')}.{$this->xpdo->escape('id')}");
+
         $c->where(array(
             'Post.parent' => $this->id,
-            'Post.deleted' => 0
+            'Post.deleted' => 0,
+            'Post.published' => 1
         ));
+
         $c->sortby('Post.id', 'ASC');
         $count = $this->xpdo->getCount('disPost', $c);
+
+        $threaded = $this->xpdo->getOption('posts_threaded', $this->xpdo->discuss2->forumConfig, false);
+        if ($threaded === 'true') {
+            $c->select(array($this->xpdo->getSelectColumns('disPost', 'postReplies', 'postReplies_', $fieldsToLoad)));
+            $depth = $this->xpdo->getOption('posts_depth', $this->xpdo->discuss2->forumConfig, 1);
+            $c->leftJoin('disClosure', 'c', "{$this->xpdo->escape('c')}.{$this->xpdo->escape('ancestor')} = {$this->xpdo->escape('Post')}.{$this->xpdo->escape('id')}");
+            $c->leftJoin('disPost', 'postReplies', "{$this->xpdo->escape('postReplies')}.{$this->xpdo->escape('id')} = {$this->xpdo->escape('c')}.{$this->xpdo->escape('descendant')}
+            AND {$this->xpdo->escape('c')}.{$this->xpdo->escape('depth')} BETWEEN 1 AND {$depth}");
+            $c->where(array(
+                'postReplies.deleted' => 0,
+                'postReplies.published' => 1
+            ));
+        }
+
         $offset = isset($this->xpdo->request->parameters['GET']['page']) ? ($this->xpdo->request->parameters['GET']['page'] -1) * $this->xpdo->discuss2->forumConfig['posts_per_page']: 0;
         $c->limit($this->xpdo->discuss2->forumConfig['posts_per_page'], $offset);
 
         $c->prepare();
+        $this->xpdo->log(xPDO::LOG_LEVEL_ERROR, $c->toSQL());
         $c->stmt->execute();
         $rows = $c->stmt->fetchAll(PDO::FETCH_ASSOC);
         if (count($rows) == 0) {
@@ -164,11 +180,12 @@ class disThread extends modResource {
     private function _treeToView($tree) {
         $posts = array();
         $postContainer = $this->xpdo->getOption('thread_posts_container', $this->xpdo->discuss2->forumConfig, 'thread.postsContainer');
-        $postRow = $this->xpdo->getOption('thread_post_chunk', $this->xpdo->discuss2->forumConfig, 'board.threadrow');
+        $postRow = $this->xpdo->getOption('thread_post_chunk', $this->xpdo->discuss2->forumConfig, 'thread.postrow');
         $actionsContainer = $this->xpdo->getOption('post_actions_container', $this->xpdo->discuss2->forumConfig, 'post.actionsContainer');
 
         $parser = $this->xpdo->discuss2->loadParser();
         foreach ($tree as &$post) {
+            $post['pagetitle'] = $parser->parse($post['pagetitle']);
             $post['content'] = $parser->parse($post['content']);
             $userids[$post['createdby']] = $post['createdby'];
         }

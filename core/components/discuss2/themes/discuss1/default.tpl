@@ -97,7 +97,7 @@
 [[+discuss2.actions.new_thread]]
 <div class="wrapper l-center f-padinfull h-group">
 <!-- home.tpl -->
-
+[[+discuss2.subboards:empty=``]]
 [[+discuss2.pagination]]
 <div class="dis-threads forum-grid category panel-stack">
 [[+discuss2.content]]

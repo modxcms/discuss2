@@ -42,7 +42,7 @@
         <field key="show_email" dbtype="tinyint" precision="1" phptype="boolean" attributes="unsigned" default="0" />
         <field key="show_online" dbtype="tinyint" precision="1" phptype="boolean" attributes="unsigned" default="0" />
         <field key="display_name" dbtype="varchar" precision="64" phptype="string" default="" />
-        <field key="user_display_name" dbtype="tinyint" precision="1" phptype="boolean" default="0" />
+        <field key="use_display_name" dbtype="tinyint" precision="1" phptype="boolean" default="0" />
 
         <index alias="primary" name="primary" primary="true" unique="true" type="BTREE">
             <column key="internalKey" length="" collation="A" null="false" />

@@ -1,1 +1,1 @@
-[[+pagetitle]]
+<li>[[+pagetitle]]</li>
