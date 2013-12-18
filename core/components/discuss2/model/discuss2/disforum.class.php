@@ -41,6 +41,21 @@ class disForum extends modResource {
         );
         $menu[] = '-';
         $menu[] = array(
+            'text' => $this->xpdo->lexicon('create_document_here'),
+            'handler' => "function(itm,e) {
+				var at = this.cm.activeNode.attributes;
+		        var p = itm.usePk ? itm.usePk : at.pk;
+
+	            Ext.getCmp('modx-resource-tree').loadAction(
+	                'a='+MODx.action['resource/create']
+	                + '&class_key='+'modResource'
+	                + '&parent='+p
+	                + (at.ctx ? '&context_key='+at.ctx : '')
+                );
+        	}",
+        );
+        $menu[] = '-';
+        $menu[] = array(
             'text' => $this->xpdo->lexicon('discuss2.edit_disForum'),
             'handler' => 'this.editResource',
         );
@@ -83,8 +98,10 @@ class disForum extends modResource {
             );
         }
 
-        $node['menu'] = array('items' => $menu);
+        $node['menu']['items'] = $menu;
+
         $node['hasChildren'] = true;
+
         return $node;
     }
 
@@ -160,13 +177,10 @@ class disForum extends modResource {
         $c->leftJoin('disBoard', 'Board', "{$this->xpdo->escape('Board')}.{$this->xpdo->escape('parent')} = {$this->xpdo->escape('disCategory')}.{$this->xpdo->escape('id')}
             AND {$this->xpdo->escape('Board')}.{$this->xpdo->escape('class_key')} = 'disBoard' AND {$this->xpdo->escape('c')}.{$this->xpdo->escape('depth')}  = 1");
         $c->leftJoin('disBoard', 'subBoard', "{$this->xpdo->escape('subBoard')}.{$this->xpdo->escape('parent')} = {$this->xpdo->escape('Board')}.{$this->xpdo->escape('id')}
+            AND {$this->xpdo->escape('subBoard')}.{$this->xpdo->escape('published')} = 1
+            AND {$this->xpdo->escape('subBoard')}.{$this->xpdo->escape('deleted')} = 0
             AND {$this->xpdo->escape('subBoard')}.{$this->xpdo->escape('class_key')} = 'disBoard'");
         $c->leftJoin('disClosure', 'c2', "{$this->xpdo->escape('c2')}.{$this->xpdo->escape('ancestor')} = {$this->xpdo->escape('Board')}.{$this->xpdo->escape('id')} ");
-        $c->leftJoin('disPost', 'Post', "{$this->xpdo->escape('Post')}.{$this->xpdo->escape('parent')} = {$this->xpdo->escape('c2')}.{$this->xpdo->escape('descendant')}
-            AND {$this->xpdo->escape('Post')}.{$this->xpdo->escape('class_key')} = 'disPost'");
-        $c->leftJoin('disUser', 'User', "{$this->xpdo->escape('User')}.{$this->xpdo->escape('id')} = {$this->xpdo->escape('Post')}.{$this->xpdo->escape('createdby')}");
-        $c->leftJoin('disUserProfile', 'Profile', "{$this->xpdo->escape('Profile')}.{$this->xpdo->escape('internalKey')} = {$this->xpdo->escape('User')}.{$this->xpdo->escape('id')}");
-
         $cSub = $this->xpdo->newQuery('disPost');
         $cSub->setClassAlias('subPost');
         $cSub->select(array("MAX({$this->xpdo->escape('subPost')}.{$this->xpdo->escape('id')})"));
@@ -176,17 +190,22 @@ class disForum extends modResource {
             "{$this->xpdo->escape('subPost')}.{$this->xpdo->escape('class_key')} = 'disPost'"
         ));
         $cSub->prepare();
+        $c->leftJoin('disPost', 'Post', "{$this->xpdo->escape('Post')}.{$this->xpdo->escape('parent')} = {$this->xpdo->escape('c2')}.{$this->xpdo->escape('descendant')}
+            AND {$this->xpdo->escape('Post')}.{$this->xpdo->escape('class_key')} = 'disPost'
+            AND {$this->xpdo->escape('Post')}.{$this->xpdo->escape('published')} = 1
+            AND {$this->xpdo->escape('Post')}.{$this->xpdo->escape('deleted')} = 0
+            AND {$this->xpdo->escape('Post')}.{$this->xpdo->escape('id')} = ({$cSub->toSQL()})");
+        $c->leftJoin('disUser', 'User', "{$this->xpdo->escape('User')}.{$this->xpdo->escape('id')} = {$this->xpdo->escape('Post')}.{$this->xpdo->escape('createdby')}");
+        $c->leftJoin('disUserProfile', 'Profile', "{$this->xpdo->escape('Profile')}.{$this->xpdo->escape('internalKey')} = {$this->xpdo->escape('User')}.{$this->xpdo->escape('id')}");
+
+
         $c->where(array(
             'parent' => $this->id,
             'published' => 1,
             'deleted' => 0,
             'Board.id IS NOT NULL',
-            'Post.id IS NOT NULL',
             'Board.deleted' => 0,
             'Board.published' => 1,
-            'Post.deleted' => 0,
-            'Post.published' => 1,
-            "Post.id = ({$cSub->toSQL()})"
         ));
         $c->sortby("{$this->xpdo->escape('disCategory')}.{$this->xpdo->escape('menuindex')}", 'ASC');
         $c->prepare();
@@ -202,6 +221,7 @@ class disForum extends modResource {
             $this->xpdo->discuss2->hydrateRow($row, $hydrated);
         }
 
+
         $principal  = $this->xpdo->newObject('modResource');
         foreach ($hydrated as $k => $cat) {
             $principal->id = $cat['id'];
@@ -210,8 +230,6 @@ class disForum extends modResource {
                 unset($hydrated[$k]);
             }
         }
-
-        reset($hydrated);
         $categories = $this->xpdo->discuss2->createTree($hydrated);
         $categories = $this->_treeToView($categories);
         $this->xpdo->setPlaceholder('discuss2.content', $categories);

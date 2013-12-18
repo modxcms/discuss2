@@ -1,5 +1,5 @@
 <?php
-$response = $modx->discuss2->runProcessor('post/edit', $hook->getValues());
+$response = $modx->discuss2->runProcessor('thread/split', $hook->getValues());
 
 if ($response->isError()) {
     return $response->getMessage();

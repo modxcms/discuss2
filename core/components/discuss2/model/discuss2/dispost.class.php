@@ -14,6 +14,10 @@ class disPost extends modResource {
 
     public function save($cacheFlag = null) {
         $isNew = $this->isNew();
+        if ($isNew) {
+            $this->alias = $this->cleanAlias($this->pagetitle);
+            $this->uri = $this->getAliasPath($this->alias);
+        }
         $this->set('class_key','disPost');
         $this->cacheable = false;
         $saved = parent::save($cacheFlag);

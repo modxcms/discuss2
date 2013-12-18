@@ -8,10 +8,12 @@ class disThread extends modResource {
     public $actionsLink = array();
 
     public $validActions = array(
-        'modify/post',
-        'remove/post',
-        'lock/thread',
-        'pin/thread'
+        'discuss2.modify_post' => 'modify/post',
+        'discuss2.remove_post' => 'remove/post',
+        'discuss2.lock_post' => 'lock/thread',
+        'discuss2.stick_thread' => 'pin/thread',
+        'discuss2.split_thread' => 'split/thread',
+        'discuss2.can_post' => 'new/post'
     );
 
     function __construct(xPDO & $xpdo) {
@@ -26,19 +28,41 @@ class disThread extends modResource {
 
     public function process() {
         $this->xpdo->lexicon->load('discuss2:front-end');
-        if (isset($_GET['action']) && in_array($_GET['action'], $this->validActions)) {
+        if (isset($this->xpdo->request->parameters['GET']['action']) && in_array($this->xpdo->request->parameters['GET']['action'], array_values($this->validActions))) {
             $contentChunk = false;
             $placeholders = array();
-            switch ($_GET['action']) {
+            if (!$this->xpdo->hasPermission(array_search($this->xpdo->request->parameters['GET']['action'], $this->validActions))) {
+                $this->xpdo->sendUnauthorizedPage();
+            }
+            switch ($this->xpdo->request->parameters['GET']['action']) {
                 case 'new/post' :
+                    if (isset($this->xpdo->request->parameters['POST'][$this->xpdo->getOption('form_preview_var', $this->xpdo->discuss2->forumConfig, 'd2-preview')]) &&
+                        $this->xpdo->request->parameters['POST'][$this->xpdo->getOption('form_preview_var', $this->xpdo->discuss2->forumConfig, 'd2-preview')] == $this->xpdo->lexicon('discuss2.preview')) {
+                        $parser = $this->xpdo->discuss2->loadParser();
+                        $this->xpdo->toPlaceholders(array(
+                            'content' => $this->xpdo->request->parameters['POST']['content'],
+                            'pagetitle' => $this->xpdo->request->parameters['POST']['pagetitle'],
+                            'thread' => $this->xpdo->request->parameters['POST']['thread'],
+                            'preview.pagetitle' => $parser->parse($this->xpdo->request->parameters['POST']['pagetitle']),
+                            'preview.content' => $parser->parse($this->xpdo->request->parameters['POST']['content'])
+                        ), 'form');
+                    }
+                    if (empty($placeholders)) {
+                        $this->xpdo->toPlaceholder('form.pagetitle', $this->xpdo->lexicon('discuss2.re') . ' ' . $this->xpdo->resource->pagetitle);
+                    }
                     $contentChunk = $this->xpdo->getOption('new_post_form', $this->xpdo->discuss2->forumConfig, 'post.newPost');
                     break;
                 case 'remove/post' :
                     if (!isset($this->xpdo->request->parameters['GET']['pid'])) {
                         break;
                     }
-
+                    $obj = $this->xpdo->getObject('disPost', $this->xpdo->request->parameters['GET']['pid']);
                     $contentChunk = $this->xpdo->getOption('remove_post_form', $this->xpdo->discuss2->forumConfig, 'post.removePost');
+                    $placeholders = array(
+                        'params'  => $this->xpdo->request->parameters,
+                        'thread' => $obj->toArray(),
+                        'action' => $this->xpdo->makeUrl($this->xpdo->resource->id, '', array('action' => 'remove/post', 'pid' => $this->xpdo->request->parameters['GET']['pid']))
+                    );
                     break;
                 case 'modify/post' :
                     if (!isset($this->xpdo->request->parameters['GET']['pid'])) {
@@ -108,7 +132,6 @@ class disThread extends modResource {
         $c->limit($this->xpdo->discuss2->forumConfig['posts_per_page'], $offset);
 
         $c->prepare();
-        $this->xpdo->log(xPDO::LOG_LEVEL_ERROR, $c->toSQL());
         $c->stmt->execute();
         $rows = $c->stmt->fetchAll(PDO::FETCH_ASSOC);
         if (count($rows) == 0) {
@@ -207,10 +230,16 @@ class disThread extends modResource {
 
     public function save($cacheFlag = null) {
         $isNew = $this->isNew();
+        if ($isNew) {
+            $this->alias = $this->cleanAlias($this->pagetitle);
+            $this->uri = $this->getAliasPath($this->alias);
+        }
         $this->cacheable = false;
         $this->set('isfolder', true);
         $saved = parent::save($cacheFlag);
+
         if ($isNew && $saved) {
+            $this->save();
             $threadStat = $this->xpdo->newObject('disThreadProperty');
             $threadStat->fromArray(array(
                 'idx' => $this->id,

@@ -1,5 +1,5 @@
 <?php
-$response = $modx->discuss2->runProcessor('web/thread/delete', $hook->getValues());
+$response = $modx->discuss2->runProcessor('thread/delete', $hook->getValues());
 
 if ($response->isError()) {
     return $response->getMessage();

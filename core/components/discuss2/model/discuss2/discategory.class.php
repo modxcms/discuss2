@@ -101,7 +101,7 @@ class disCategory extends modResource {
             'lastpost_display_name' => 'Profile.display_name',
             'lastpost_use_display_name' => 'Profile.use_display_name',
             'lastpost_thread_id' => 'Post.parent',
-            'lastpost_parent' => 'Board.id', // Setting this to Board to show as last post on it
+            'lastpost_parent' => 'c.ancestor', // Setting this to Board to show as last post on it
             'lastpost_class_key' => 'Post.class_key',
             'lastpost_createdon' => 'Post.createdon',
             'subPost_pagetitle' => 'subPost.pagetitle',
@@ -112,21 +112,41 @@ class disCategory extends modResource {
             'subPost_display_name' => 'Profile2.display_name',
             'subPost_use_display_name' => 'Profile2.use_display_name',
             'subPost_thread_id' => 'subPost.parent',
-            'subPost_parent' => 'subBoard.id', // Setting this to Board to show as last subPost on it
+            'subPost_parent' => 'c2.ancestor', // Setting this to Board to show as last subPost on it
             'subPost_class_key' => 'subPost.class_key',
             'subPost_createdon' => 'subPost.createdon'
         ));
         $c->innerJoin('disClosure', 'c', "{$this->xpdo->escape('c')}.{$this->xpdo->escape('ancestor')} = {$this->xpdo->escape('Board')}.{$this->xpdo->escape('id')} ");
         $c->leftJoin('disBoard', 'subBoard', "{$this->xpdo->escape('subBoard')}.{$this->xpdo->escape('parent')} = {$this->xpdo->escape('Board')}.{$this->xpdo->escape('id')}
-            AND {$this->xpdo->escape('subBoard')}.{$this->xpdo->escape('class_key')} = 'disBoard' AND {$this->xpdo->escape('c')}.{$this->xpdo->escape('depth')}  = 1");
+            AND {$this->xpdo->escape('subBoard')}.{$this->xpdo->escape('class_key')} = 'disBoard'");
 
-        $c->leftJoin('disClosure', 'c2', "{$this->xpdo->escape('c2')}.{$this->xpdo->escape('ancestor')} = {$this->xpdo->escape('Board')}.{$this->xpdo->escape('id')} ");
-        $c->leftJoin('disPost', 'Post', "{$this->xpdo->escape('Post')}.{$this->xpdo->escape('parent')} = {$this->xpdo->escape('c2')}.{$this->xpdo->escape('descendant')}
-            AND {$this->xpdo->escape('Post')}.{$this->xpdo->escape('class_key')} = 'disPost'");
+        $cSub = $this->xpdo->newQuery('disPost');
+        $cSub->setClassAlias('postPrimary');
+        $cSub->select(array("MAX({$this->xpdo->escape('postPrimary')}.{$this->xpdo->escape('id')})"));
+        $cSub->leftJoin('disClosure', 'c3', "{$this->xpdo->escape('postPrimary')}.{$this->xpdo->escape('id')} = {$this->xpdo->escape('c3')}.{$this->xpdo->escape('descendant')}");
+        $cSub->where(array(
+            "{$this->xpdo->escape('c3')}.{$this->xpdo->escape('ancestor')} = {$this->xpdo->escape('Board')}.{$this->xpdo->escape('id')}",
+            "{$this->xpdo->escape('postPrimary')}.{$this->xpdo->escape('class_key')} = 'disPost'"));
+        $cSub->prepare();
 
-        $c->leftJoin('disClosure', 'c3', "{$this->xpdo->escape('c3')}.{$this->xpdo->escape('ancestor')} = {$this->xpdo->escape('subBoard')}.{$this->xpdo->escape('id')} ");
-        $c->leftJoin('disPost', 'subPost', "{$this->xpdo->escape('subPost')}.{$this->xpdo->escape('parent')} = {$this->xpdo->escape('c3')}.{$this->xpdo->escape('descendant')}
-            AND {$this->xpdo->escape('subPost')}.{$this->xpdo->escape('class_key')} = 'disPost'");
+        $c->leftJoin('disPost', 'Post', "{$this->xpdo->escape('Post')}.{$this->xpdo->escape('parent')} = {$this->xpdo->escape('c')}.{$this->xpdo->escape('descendant')}
+            AND {$this->xpdo->escape('Post')}.{$this->xpdo->escape('class_key')} = 'disPost'
+            AND{$this->xpdo->escape('Post')}.{$this->xpdo->escape('id')} = ({$cSub->toSQL()})");
+
+        $cSub2 = $this->xpdo->newQuery('disPost');
+        $cSub2->setClassAlias('postSecondary');
+        $cSub2->select(array("MAX({$this->xpdo->escape('postSecondary')}.{$this->xpdo->escape('id')})"));
+        $cSub2->leftJoin('disClosure', 'c4', "{$this->xpdo->escape('postSecondary')}.{$this->xpdo->escape('id')} = {$this->xpdo->escape('c4')}.{$this->xpdo->escape('descendant')}");
+        $cSub2->where(array(
+            "{$this->xpdo->escape('c4')}.{$this->xpdo->escape('ancestor')} = {$this->xpdo->escape('subBoard')}.{$this->xpdo->escape('id')}",
+            "{$this->xpdo->escape('postSecondary')}.{$this->xpdo->escape('class_key')} = 'disPost'"
+        ));
+
+        $cSub2->prepare();
+        $c->leftJoin('disClosure', 'c2', "{$this->xpdo->escape('c2')}.{$this->xpdo->escape('ancestor')} = {$this->xpdo->escape('subBoard')}.{$this->xpdo->escape('id')} ");
+        $c->leftJoin('disPost', 'subPost', "{$this->xpdo->escape('subPost')}.{$this->xpdo->escape('parent')} = {$this->xpdo->escape('c2')}.{$this->xpdo->escape('descendant')}
+            AND {$this->xpdo->escape('subPost')}.{$this->xpdo->escape('class_key')} = 'disPost'
+            AND subPost.id = ({$cSub2->toSQL()})");
 
         $c->leftJoin('disUser', 'User', "{$this->xpdo->escape('User')}.{$this->xpdo->escape('id')} = {$this->xpdo->escape('Post')}.{$this->xpdo->escape('createdby')}");
         $c->leftJoin('disUserProfile', 'Profile', "{$this->xpdo->escape('Profile')}.{$this->xpdo->escape('internalKey')} = {$this->xpdo->escape('User')}.{$this->xpdo->escape('id')}");
@@ -134,39 +154,10 @@ class disCategory extends modResource {
         $c->leftJoin('disUser', 'User2', "{$this->xpdo->escape('User2')}.{$this->xpdo->escape('id')} = {$this->xpdo->escape('subPost')}.{$this->xpdo->escape('createdby')}");
         $c->leftJoin('disUserProfile', 'Profile2', "{$this->xpdo->escape('Profile2')}.{$this->xpdo->escape('internalKey')} = {$this->xpdo->escape('User2')}.{$this->xpdo->escape('id')}");
 
-        $cSub = $this->xpdo->newQuery('disPost');
-        $cSub->setClassAlias('subPost');
-        $cSub->select(array("MAX({$this->xpdo->escape('subPost')}.{$this->xpdo->escape('id')})"));
-        $cSub->leftJoin('disClosure', 'c3', "{$this->xpdo->escape('subPost')}.{$this->xpdo->escape('id')} = {$this->xpdo->escape('c3')}.{$this->xpdo->escape('descendant')}");
-        $cSub->where(array(
-            "{$this->xpdo->escape('c3')}.{$this->xpdo->escape('ancestor')} = {$this->xpdo->escape('Board')}.{$this->xpdo->escape('id')}",
-            "{$this->xpdo->escape('subPost')}.{$this->xpdo->escape('class_key')} = 'disPost'"
-        ));
-
-        $cSub2 = $this->xpdo->newQuery('disPost');
-        $cSub2->setClassAlias('subPost2');
-        $cSub2->select(array("MAX({$this->xpdo->escape('subPost2')}.{$this->xpdo->escape('id')})"));
-        $cSub2->leftJoin('disClosure', 'c3', "{$this->xpdo->escape('subPost2')}.{$this->xpdo->escape('id')} = {$this->xpdo->escape('c3')}.{$this->xpdo->escape('descendant')}");
-        $cSub2->where(array(
-            "{$this->xpdo->escape('c3')}.{$this->xpdo->escape('ancestor')} = {$this->xpdo->escape('subBoard')}.{$this->xpdo->escape('id')}",
-            "{$this->xpdo->escape('subPost2')}.{$this->xpdo->escape('class_key')} = 'disPost'"
-        ));
-        $cSub->prepare();
-        $cSub2->prepare();
         $c->where(array(
             'Board.parent' => $this->id,
             'Board.published' => 1,
             'Board.deleted' => 0,
-            'subBoard.id IS NOT NULL',
-            'Post.id IS NOT NULL',
-            'subBoard.deleted' => 0,
-            'subBoard.published' => 1,
-            'Post.deleted' => 0,
-            'Post.published' => 1,
-            "Post.id = ({$cSub->toSQL()})",
-            'subPost.deleted' => 0,
-            'subPost.published' => 1,
-            "subPost.id = ({$cSub2->toSQL()})"
         ));
         $c->sortby("{$this->xpdo->escape('Board')}.{$this->xpdo->escape('menuindex')}", 'ASC');
         $c->prepare();
@@ -191,15 +182,17 @@ class disCategory extends modResource {
             }
         }
         reset($hydrated);
+
         $boards = $this->xpdo->discuss2->createTree($hydrated);
         $boards = $this->_treeToView($boards);
-
         $this->xpdo->setPlaceholder('discuss2.content', implode("\n",$boards));
     }
 
     private function _treeToView($tree) {
-        $boardRow = $this->xpdo->getOption('boardRow', $this->config, 'category.boardRow');
-        $subBoardRow = $this->xpdo->getOption('subBoardRow', $this->config, 'category.subBoardRow');
+        $boardContainer = $this->xpdo->getOption('subBoardRow', $this->xpdo->discuss2->forumConfig, 'category.subBoardRow');
+        $boardRow = $this->xpdo->getOption('boardRow', $this->xpdo->discuss2->forumConfig, 'category.boardRow');
+        $subBoardContainer = $this->xpdo->getOption('categories_subboard_container', $this->xpdo->discuss2->forumConfig, 'category.subBoardContainer');
+        $subBoardRow = $this->xpdo->getOption('subBoardRow', $this->xpdo->discuss2->forumConfig, 'category.subBoardRow');
         $boards = array();
         $parser = $this->xpdo->discuss2->loadParser();
         foreach ($tree as $board) {
@@ -231,8 +224,9 @@ class disCategory extends modResource {
                     $subBoards[] = $this->xpdo->discuss2->getChunk($subBoardRow,$subBoard);
                 }
             };
+            $subBoardsChunk = $this->xpdo->discuss2->getChunk($subBoardContainer, array('boards' => implode("\n", $subBoards)));
             // TODO: Add read/undead threads check
-            $boards[] = $this->xpdo->discuss2->getChunk($boardRow,array_merge($board, array('boards' => implode("\n", $subBoards))));
+            $boards[] = $this->xpdo->discuss2->getChunk($boardRow,array_merge($board, array('subBoards' => $subBoardsChunk)));
         }
         return $boards;
     }

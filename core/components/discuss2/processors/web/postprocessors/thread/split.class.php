@@ -23,7 +23,7 @@ class splitThreadProcessor extends modObjectUpdateProcessor {
             $this->object->properties = $this->modx->fromJSON($this->object->properties);
         }
 
-        $response = $this->modx->discuss2->runProcessor('web/thread/new', array(
+        $response = $this->modx->discuss2->runProcessor('thread/new', array(
             'parent' => $this->getProperty('parent'),
             'pagetitle' => $this->getProperty('pagetitle'),
             'content' => $this->getProperty('content'),

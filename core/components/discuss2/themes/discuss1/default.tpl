@@ -100,6 +100,7 @@
 [[+discuss2.subboards:empty=``]]
 [[+discuss2.pagination]]
 <div class="dis-threads forum-grid category panel-stack">
+    [[*pagetitle]]
 [[+discuss2.content]]
 </div><!-- /dis-threads -->
 
