@@ -5,4 +5,4 @@ if ($response->isError()) {
     return $response->getMessage();
 }
 $obj = $response->getObject();
-$modx->sendRedirect($modx->makeUrl($this->modx->resource->id));
+$modx->sendRedirect($modx->discuss2->makeUrl($this->modx->resource->id));

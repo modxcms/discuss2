@@ -10,10 +10,15 @@ abstract class disWebController {
     public $currentAction = array();
 
     public $properties = array();
+    public $controllerPath = null;
 
     public $action = null;
+    public $chunk = null;
+    public $pageController = null;
 
     public $lexicon = 'discuss2:front-end';
+
+    public abstract function process();
 
     public function __construct(modX &$modx, $properties = array()) {
         $this->modx = $modx;
@@ -63,7 +68,12 @@ abstract class disWebController {
         $this->beforeGetContent();
         $obj = $this->getContent();
         $this->afterGetContent($obj);
-        $this->modx->setPlaceholders('discuss2.', $obj);
+        $this->_getContentChunk();
+        $view = $this->runPageController($obj);
+        // TODO : remove sample. prefix
+
+        $view['pagetitle'] = $this->modx->lexicon($this->currentAction[$this->action]['key']);
+        $this->modx->toPlaceholder('discuss2.content',$this->discuss->getChunk($this->chunk, $view));
     }
 
     public function preProcess() {
@@ -75,11 +85,15 @@ abstract class disWebController {
     public function afterGetContent(&$obj) {}
 
     public function getContent() {
-        $chunk = $this->_getContentChunk();
-
-    }
-
-    public function runContentProcessor($action) {
+        $response = $this->discuss->runProcessor($this->action, array(), array(
+            'context' => 'web',
+            'target' => 'preprocessors'
+        ));
+        if ($response->isError()) {
+            $this->modx->log(xPDO::LOG_LEVEL_ERROR, "Error running preprocessor {$this->action}\n{$response->getMessage()}");
+            return '';
+        }
+        return $response->getObject();
 
     }
 
@@ -104,10 +118,22 @@ abstract class disWebController {
             }
         }
         if ($chunk !== null) {
+            $this->chunk = $this->modx->getOption($chunk, $this->discuss->forumConfig, 'sample.'.str_replace("_", '', $chunk));
             return $chunk;
         }
         $this->modx->sendErrorPage();
     }
 
-    public abstract function process();
+    public function runPageController($obj) {
+        $path = dirname(__FILE__).'/'.$this->controllerPath;
+        $controllername = str_replace('/','',$this->action);
+        $controller = $controllername .".class.php";
+        $controllername .= "Controller";
+        if (!file_exists($path.$controller)) {
+            $this->modx->log(xPDO::LOG_LEVEL_ERROR, 'Could not find page controller ' . $controller . " from " . $path);
+        }
+        require_once $path.$controller;
+        $this->pageController = new $controllername($this->modx, $this->discuss, $obj);
+        return $this->pageController->render();
+    }
 }

@@ -50,18 +50,18 @@ class disThread extends modResource {
                     if (empty($placeholders)) {
                         $this->xpdo->toPlaceholder('form.pagetitle', $this->xpdo->lexicon('discuss2.re') . ' ' . $this->xpdo->resource->pagetitle);
                     }
-                    $contentChunk = $this->xpdo->getOption('new_post_form', $this->xpdo->discuss2->forumConfig, 'post.newPost');
+                    $contentChunk = $this->xpdo->getOption('new_post_form', $this->xpdo->discuss2->forumConfig, 'sample.newPost');
                     break;
                 case 'remove/post' :
                     if (!isset($this->xpdo->request->parameters['GET']['pid'])) {
                         break;
                     }
                     $obj = $this->xpdo->getObject('disPost', $this->xpdo->request->parameters['GET']['pid']);
-                    $contentChunk = $this->xpdo->getOption('remove_post_form', $this->xpdo->discuss2->forumConfig, 'post.removePost');
+                    $contentChunk = $this->xpdo->getOption('remove_post_form', $this->xpdo->discuss2->forumConfig, 'sample.removePost');
                     $placeholders = array(
                         'params'  => $this->xpdo->request->parameters,
                         'thread' => $obj->toArray(),
-                        'action' => $this->xpdo->makeUrl($this->xpdo->resource->id, '', array('action' => 'remove/post', 'pid' => $this->xpdo->request->parameters['GET']['pid']))
+                        'action' => $this->xpdo->discuss2->makeUrl($this->xpdo->resource->id, '', 'remove/post', array('pid' => $this->xpdo->request->parameters['GET']['pid']))
                     );
                     break;
                 case 'modify/post' :
@@ -69,11 +69,11 @@ class disThread extends modResource {
                         break;
                     }
                     $obj = $this->xpdo->getObject('disPost', $this->xpdo->request->parameters['GET']['pid']);
-                    $contentChunk = $this->xpdo->getOption('edit_post_form', $this->xpdo->discuss2->forumConfig, 'post.editPost');
+                    $contentChunk = $this->xpdo->getOption('edit_post_form', $this->xpdo->discuss2->forumConfig, 'sample.editPost');
                     $placeholders = array(
                         'params'  => $this->xpdo->request->parameters,
                         'thread' => $obj->toArray(),
-                        'action' => $this->xpdo->makeUrl($this->xpdo->resource->id, '', array('action' => 'modify/post', 'pid' => $this->xpdo->request->parameters['GET']['pid']))
+                        'action' => $this->xpdo->discuss2->makeUrl($this->xpdo->resource->id, '', 'modify/post', array('pid' => $this->xpdo->request->parameters['GET']['pid']))
                     );
                     break;
             }
@@ -151,7 +151,8 @@ class disThread extends modResource {
             $this->xpdo->setPlaceholder('discuss2.pagination', $pagination);
         }
         if ($this->xpdo->hasPermission('discuss2.can_post')) {
-            $this->xpdo->setPlaceholder('discuss2.form', $this->xpdo->discuss2->getChunk('post.newPost'));
+            $newPostForm = $this->xpdo->getOption('new_post_form', $this->xpdo->discuss2->forumConfig, 'sample.newPost');
+            $this->xpdo->setPlaceholder('discuss2.form', $this->xpdo->discuss2->getChunk($newPostForm));
         }
         //$this->xpdo->setPlaceholder('discuss2.thread_actions', $this->_getThreadActions($this->createdby));
         $this->xpdo->setPlaceholder('discuss2.content', $posts);
@@ -159,25 +160,25 @@ class disThread extends modResource {
 
     public function getThreadActions($thread) {
         $x = &$this->xpdo;
-        $actionChunk = $x->getOption('thread_actions_item', $x->discuss->forumConfig, 'thread.actionsItem');
+        $actionChunk = $x->getOption('thread_actions_item', $x->discuss->forumConfig, 'sample.actionsItem');
         if ($x->hasPermission('discuss2.remove_thread')) {
             $this->actionLinks['actions.remove_thread'] = $x->discuss2->getChunk($actionChunk, array(
-                'link' => $x->makeUrl($this->id, '', array('action' => 'remove/thread', 'tid' => $thread)),
+                'link' => $x->discuss2->makeUrl($this->id, '', 'remove/thread', array('tid' => $thread)),
                 'text' => $x->lexicon('discuss2.remove_thread')));
         }
         if ($x->hasPermission('discuss2.lock_thread')) {
             $this->actionLinks['actions.lock_thread'] = $x->discuss2->getChunk($actionChunk, array(
-                'link' => $x->makeUrl($this->id, '', array('action' => 'lock/thread', 'tid' => $thread)),
+                'link' => $x->discuss2->makeUrl($this->id, '', 'lock/thread', array('tid' => $thread)),
                 'text' => $x->lexicon('discuss2.lock_thread')));
         }
         if ($x->hasPermission('discuss2.modify_thread')) {
             $this->actionLinks['actions.modify_thread'] = $x->discuss2->getChunk($actionChunk, array(
-                'link' => $x->makeUrl($this->id, '', array('action' => 'modify/thread', 'tid' => $thread)),
+                'link' => $x->discuss2->makeUrl($this->id, '', 'modify/thread', array('tid' => $thread)),
                 'text' => $x->lexicon('discuss2.edit_thread')));
         }
         if ($x->hasPermission('discuss2.stick_thread')) {
             $this->actionLinks['actions.stick_thread'] = $x->discuss2->getChunk($actionChunk, array(
-                'link' => $x->makeUrl($this->id, '', array('action' => 'pin/thread', 'tid' => $thread)),
+                'link' => $x->discuss2->makeUrl($this->id, '', 'pin/thread', array('tid' => $thread)),
                 'text' => $x->lexicon('discuss2.pin_thread')));
         }
         return $this->actionLinks;
@@ -186,25 +187,25 @@ class disThread extends modResource {
     public function getPostActions($userId, $postId) {
         $x = &$this->xpdo;
         $links = array();
-        $actionChunk = $x->getOption('post_actions_item', $x->discuss->forumConfig, 'post.actionsItem');
+        $actionChunk = $x->getOption('post_actions_item', $x->discuss->forumConfig, 'sample.actionsItem');
         if ($x->hasPermission('discuss2.remove_post')) {
             $links['actions.remove_post'] = $x->discuss2->getChunk($actionChunk, array(
-                'link' => $x->makeUrl($this->id, '', array('action' => 'remove/post', 'pid' => $postId)),
+                'link' => $x->makeUrl($this->id, '', 'remove/post', array('pid' => $postId)),
                 'text' => $x->lexicon('discuss2.remove_post')));
         }
         if ($x->hasPermission('discuss2.modify_post') || $userId == $this->xpdo->user->id) {
             $links['actions.modify_post'] = $x->discuss2->getChunk($actionChunk, array(
-                'link' => $x->makeUrl($this->id, '', array('action' => 'modify/post', 'pid' => $postId)),
-                'text' => $x->lexicon('discuss2.edit_post')));
+                'link' => $x->discuss2->makeUrl($this->id, '', 'modify/post', array('pid' => $postId)),
+                'text' => $x->discuss2->lexicon('discuss2.edit_post')));
         }
         return $links;
     }
 
     private function _treeToView($tree) {
         $posts = array();
-        $postContainer = $this->xpdo->getOption('thread_posts_container', $this->xpdo->discuss2->forumConfig, 'thread.postsContainer');
-        $postRow = $this->xpdo->getOption('thread_post_chunk', $this->xpdo->discuss2->forumConfig, 'thread.postrow');
-        $actionsContainer = $this->xpdo->getOption('post_actions_container', $this->xpdo->discuss2->forumConfig, 'post.actionsContainer');
+        $postContainer = $this->xpdo->getOption('thread_posts_container', $this->xpdo->discuss2->forumConfig, 'sample.postsContainer');
+        $postRow = $this->xpdo->getOption('thread_post_chunk', $this->xpdo->discuss2->forumConfig, 'sample.postrow');
+        $actionsContainer = $this->xpdo->getOption('post_actions_container', $this->xpdo->discuss2->forumConfig, 'sample.actionsContainer');
 
         $parser = $this->xpdo->discuss2->loadParser();
         foreach ($tree as &$post) {

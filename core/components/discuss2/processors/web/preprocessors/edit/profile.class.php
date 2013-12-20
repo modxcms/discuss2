@@ -2,8 +2,8 @@
 if (!class_exists('disPreProcessor')) {
     require_once dirname(dirname(__FILE__)).'/dispreprocessor.class.php';
 }
-class modViewProfileProcessor extends disPreProcessor {
-    protected $visibility = 'public';
+class modEditProfileProcessor extends disPreProcessor {
+    protected $visibility = 'private';
     public function process() {
         $username = $this->modx->request->parameters['GET']['username'];
         $c = $this->modx->newQuery('disUser');

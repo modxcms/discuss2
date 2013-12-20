@@ -189,10 +189,10 @@ class disCategory extends modResource {
     }
 
     private function _treeToView($tree) {
-        $boardContainer = $this->xpdo->getOption('subBoardRow', $this->xpdo->discuss2->forumConfig, 'category.subBoardRow');
-        $boardRow = $this->xpdo->getOption('boardRow', $this->xpdo->discuss2->forumConfig, 'category.boardRow');
-        $subBoardContainer = $this->xpdo->getOption('categories_subboard_container', $this->xpdo->discuss2->forumConfig, 'category.subBoardContainer');
-        $subBoardRow = $this->xpdo->getOption('subBoardRow', $this->xpdo->discuss2->forumConfig, 'category.subBoardRow');
+        $boardContainer = $this->xpdo->getOption('subBoardRow', $this->xpdo->discuss2->forumConfig, 'sample.subBoardRow');
+        $boardRow = $this->xpdo->getOption('boardRow', $this->xpdo->discuss2->forumConfig, 'sample.boardRow');
+        $subBoardContainer = $this->xpdo->getOption('categories_subboard_container', $this->xpdo->discuss2->forumConfig, 'sample.subBoardContainer');
+        $subBoardRow = $this->xpdo->getOption('subBoardRow', $this->xpdo->discuss2->forumConfig, 'sample.subBoardRow');
         $boards = array();
         $parser = $this->xpdo->discuss2->loadParser();
         foreach ($tree as $board) {
@@ -207,7 +207,7 @@ class disCategory extends modResource {
                 $board['lastpost.author_username'] = ($lastPost['use_display_name'] == 1) ? $lastPost['display_name'] : $lastPost['username'];
                 $board['lastpost.link'] = $this->xpdo->discuss2->getLastPostLink($lastPost['thread_id'], $lastPost['id']);
             }
-            $board['link'] = $this->xpdo->makeUrl($board['id']);
+            $board['link'] = $this->xpdo->discuss2->makeUrl($board['id']);
             if (!empty($board['disBoard'])) {
                 foreach($board['disBoard'] as $subBoard) {
                     if (isset($subBoard['disPost'])) {
@@ -220,7 +220,7 @@ class disCategory extends modResource {
                         $subBoard['lastpost.author_username'] = ($lastPost['use_display_name'] == 1) ? $lastPost['display_name'] : $lastPost['username'];
                         $subBoard['lastpost.link'] = $this->xpdo->discuss2->getLastPostLink($lastPost['thread_id'], $lastPost['id']);
                     }
-                    $subBoard['link'] = $this->xpdo->makeUrl($subBoard['id']);
+                    $subBoard['link'] = $this->xpdo->discuss2->makeUrl($subBoard['id']);
                     $subBoards[] = $this->xpdo->discuss2->getChunk($subBoardRow,$subBoard);
                 }
             };

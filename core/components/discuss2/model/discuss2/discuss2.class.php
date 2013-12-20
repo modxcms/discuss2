@@ -128,7 +128,7 @@ class Discuss2 {
         if (!isset($this->chunks[$name])) {
             $chunk = $this->modx->getObject('modChunk',array('name' => $name),true);
             if (empty($chunk)) {
-                $chunk = $this->_getTplChunk($name);
+                $chunk = $this->_getTplChunk($name,$this->config['chunkSuffix']);
                 if ($chunk == false) return false;
             }
             $this->chunks[$name] = $chunk->getContent();
@@ -146,19 +146,13 @@ class Discuss2 {
      *
      * @access private
      * @param string $name The name of the Chunk. Will parse to name.chunk.tpl
+     * @param string $suffix
      * @return modChunk/boolean Returns the modChunk object if found, otherwise
      * false.
      */
-    private function _getTplChunk($name) {
+    private function _getTplChunk($name,$suffix = '.chunk.tpl') {
         $chunk = false;
-        if (strpos($name, '.') !== false) {
-            $path = str_replace('.', '/', $name);
-            $name = substr($name, strrpos($name, '/'));
-        } else {
-            $path = $name;
-        }
-
-        $f = $this->config['chunksPath'].strtolower($path).'.chunk.tpl';
+        $f = $this->config['chunksPath'].strtolower($name).$suffix;
         if (file_exists($f)) {
             $o = file_get_contents($f);
             $chunk = $this->modx->newObject('modChunk');
@@ -173,12 +167,12 @@ class Discuss2 {
         if ($posts instanceof xPDOObject) {
             $perPage = $this->forumConfig['posts_per_page'];
             if ($posts->posts <= $perPage) {
-                return $this->modx->makeUrl($threadId) . "#post-{$postId}";
+                return $this->makeUrl($threadId) . "#post-{$postId}";
 
             }
             $pages = ceil($posts/$perPage);
 
-            return $this->modx->makeUrl($threadId, '', array('page' => $pages)) . "#post-{$postId}";
+            return $this->makeUrl($threadId, '', array('page' => $pages)) . "#post-{$postId}";
         }
     }
 
@@ -196,20 +190,19 @@ class Discuss2 {
      */
     public function runProcessor($action = '',$scriptProperties = array(),$options = array()) {
         $options['processors_path'] = $this->config['processorsPath'];
-        $options['processor_path'] = isset($options['context']) ? $options['context'] ."/" : 'web/';
-        $options['processor_path'] = isset($options['target']) ? $options['target'] ."/" : 'postprocessors/';
-
+        $options['processors_path'] .= isset($options['context']) ? $options['context'] ."/" : 'web/';
+        $options['processors_path'] .= isset($options['target']) ? $options['target'] ."/" : 'postprocessors/';
         return $this->modx->runProcessor($action, $scriptProperties, $options);
     }
 
     public function runFrontController($controller) {
         $class = $this->modx->loadClass('dis'. ucfirst($controller).'Controller', $this->config['frontControllerPath'], false, true);
         $this->controller = new $class($this->modx);
-
+        $this->controller->render();
     }
 
     public function makeUrl($id, $action = '', $options = array()) {
-        if ($this->modx->getOption('friendly_url') == true) {
+        if ($this->modx->getOption('friendly_url') == true && $action !== '') {
             $url = $this->modx->makeUrl($id) . "/" . $action;
             $use_xhtml = $this->modx->getOption('xhtml_urls');
             if ($use_xhtml == true) {

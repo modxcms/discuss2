@@ -14,7 +14,7 @@
 </div>
 `]]
 
-<form action="[[~[[*id]]]]&action=new/thread" method="post" class="dis-form" id="dis-new-thread-form" enctype="multipart/form-data">
+<form action="[[+action]]" method="post" class="dis-form" id="dis-new-thread-form" enctype="multipart/form-data">
 
     <h2>[[%discuss.start_new_thread? &namespace=`discuss` &topic=`post`]]</h2>
     <label for="dis-new-thread-title">[[%discuss.title]]:

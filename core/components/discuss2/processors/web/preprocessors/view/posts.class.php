@@ -4,14 +4,15 @@ if (!class_exists('disPreProcessor')) {
     require_once dirname(dirname(__FILE__)).'/dispreprocessor.class.php';
 }
 
-class postsProcessor extends disPreProcesser {
-    protected $classKey = 'disPost';
+class modViewPostsProcessor extends disPreProcessor {
     protected $visibility = 'public';
 
     public function process() {
         $c = $this->modx->newQuery('disPost');
+        $c->select(array($this->modx->getSelectColumns('disPost', '', '')));
         $c->where(array(
-            'createdby' => $this->discuss->controller->user->id
+            'createdby' => $this->discuss->controller->user->id,
+            'class_key' => 'disPost'
         ));
         $c->sortby('createdon', 'DESC');
 
@@ -20,7 +21,7 @@ class postsProcessor extends disPreProcesser {
         if ($count > $this->discuss->forumConfig['threads_per_page']) {
             $pagination = $this->discuss->loadPagination();
             $pages = $pagination->processMainPagination($count, 'threads_per_page');
-            $this->xpdo->setPlaceholder('discuss2.pagination', $pages);
+            $this->modx->setPlaceholder('discuss2.pagination', $pages);
         }
 
         $offset = isset($this->modx->request->parameters['GET']['page']) ? ($this->modx->request->parameters['GET']['page'] -1) * $this->modx->discuss2->forumConfig['threads_per_page']: 0;
@@ -28,6 +29,6 @@ class postsProcessor extends disPreProcesser {
 
         $c->prepare();
         $c->stmt->execute();
-
+        return $this->success('OK', $c->stmt->fetchAll(PDO::FETCH_ASSOC));
     }
 }

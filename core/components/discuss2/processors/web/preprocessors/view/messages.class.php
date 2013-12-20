@@ -5,5 +5,7 @@ if (!class_exists('disPreProcessor')) {
 }
 
 class messagesProcessor extends disPreProcesser {
+    public function process() {
 
+    }
 }

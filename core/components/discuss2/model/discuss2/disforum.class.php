@@ -236,11 +236,11 @@ class disForum extends modResource {
     }
 
     private function _treeToView($tree) {
-        $catsContainer =  $this->xpdo->getOption('categories_container', $this->xpdo->discuss2->forumConfig, 'category.categoriesContainer');
-        $catChunk =  $this->xpdo->getOption('categories_category_chunk', $this->xpdo->discuss2->forumConfig, 'category.categoryChunk');
-        $boardChunk =  $this->xpdo->getOption('categories_board_row', $this->xpdo->discuss2->forumConfig, 'category.boardRow');
-        $subBoardChunk =  $this->xpdo->getOption('categories_subboard_row', $this->xpdo->discuss2->forumConfig, 'category.subboardRow');
-        $subBoardContainer = $this->xpdo->getOption('categories_subboard_container', $this->xpdo->discuss2->forumConfig, 'category.subBoardContainer');
+        $catsContainer =  $this->xpdo->getOption('categories_container', $this->xpdo->discuss2->forumConfig, 'sample.categoriesContainer');
+        $catChunk =  $this->xpdo->getOption('categories_category_chunk', $this->xpdo->discuss2->forumConfig, 'sample.categoryChunk');
+        $boardChunk =  $this->xpdo->getOption('categories_board_row', $this->xpdo->discuss2->forumConfig, 'sample.boardRow');
+        $subBoardChunk =  $this->xpdo->getOption('categories_subboard_row', $this->xpdo->discuss2->forumConfig, 'sample.subboardRow');
+        $subBoardContainer = $this->xpdo->getOption('categories_subboard_container', $this->xpdo->discuss2->forumConfig, 'sample.subBoardContainer');
 
         $categories = array();
         $parser = $this->xpdo->discuss2->loadParser();
@@ -265,7 +265,7 @@ class disForum extends modResource {
                             $subBoards[] = $this->xpdo->discuss2->getChunk($subBoardChunk, $subBoard);
                         }
                     }
-                    $board['link'] = $this->xpdo->makeUrl($board['id']);
+                    $board['link'] = $this->xpdo->discuss2->makeUrl($board['id']);
                     $board = array_merge($board, $this->xpdo->discuss2->stats->getRepliesAndThreads($board['id']));
                     // TODO: Add read/undead threads check
                     $board['subBoards'] = $this->xpdo->discuss2->getChunk($subBoardContainer, array('boards' => implode("",$subBoards)));
@@ -273,7 +273,7 @@ class disForum extends modResource {
                 }
             }
 
-            $category['link'] = $this->xpdo->makeUrl($category['id']);
+            $category['link'] = $this->xpdo->discuss2->makeUrl($category['id']);
             $categories[] = $this->xpdo->discuss2->getChunk($catChunk,array_merge($category, array('boards' => implode("\n", $boards))));
         }
         $catOut = $this->xpdo->discuss2->getChunk($catsContainer, array('categories' => implode("\n", $categories)));

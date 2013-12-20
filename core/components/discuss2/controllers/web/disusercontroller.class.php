@@ -5,34 +5,36 @@ if (!class_exists('disWebController')) {
 }
 
 class disUserController extends disWebController {
-    private $user;
+    public $user;
+    public $controllerPath = "user/";
 
     public $privateActions = array(
         'edit/profile' => array(
             'key' => 'discuss2.edit_profile',
-            'chunk' => 'user_pages_edit_profile'),
-        'view/subscriptions' => array(
-            'key' => 'discuss2.subscriptions',
             'chunk' => 'user_pages_edit_profile'
         ),
-        'view/messages' => array(
+        'view/subscriptions' => array(
+            'key' => 'discuss2.subscriptions',
+            'chunk' => 'user_pages_subscriptions'
+        ),
+        /*'view/messages' => array(
             'key' => 'discuss2.messages',
             'chunk' => 'user_pages_pms'
-        ),
-        'view/profile' => array(
-            'key' => 'discuss2.view_profile',
-            'chunk' => 'user_pages_profile'
         ),
         'merge/account' => array(
             'key' => 'discuss2.merge_account',
             'chunk' => 'user_merge'
-        )
+        )*/
     );
 
     public $publicActions = array(
+        'view/profile' => array(
+            'key' => 'discuss2.view_profile',
+            'chunk' => 'user_pages_profile'
+        ),
         'view/posts' => array(
             'key' => 'discuss2.view_posts',
-            'chunk' => 'user_merge'
+            'chunk' => 'view_posts'
         ),
         'view/stats' => array(
             'key' => 'discuss2.view_stats',
@@ -45,11 +47,11 @@ class disUserController extends disWebController {
     );
 
     public $accessibleActions = array(
-        'discuss2.ban' => array(
+        /*'discuss2.ban' => array(
             'action' => 'ban/user',
             'key' => 'discuss2.ban_user',
             'chunk' => 'pages_ban_user'
-        )
+        )*/
     );
 
     public function init() {
@@ -58,17 +60,16 @@ class disUserController extends disWebController {
         $c->where(array('username' => $username));
         $usr = $this->modx->getObject('disUser', $c);
         if ($usr instanceof modUser) {
-            $this->user &= $usr;
+            $this->user = $usr;
         } else {
             $this->modx->sendErrorPage();
         }
         return true;
-
     }
 
     public function process() {
-        $actionsContainer = $this->modx->getOption('user_actions_container', $this->discuss->forumConfig, 'actions.userActionContainer');
-        $actionsItem = $this->modx->getOption('user_actions_item', $this->discuss->forumConfig, 'actions.userActionItem');
+        $actionsContainer = $this->modx->getOption('user_actions_container', $this->discuss->forumConfig, 'sample.userActionContainer');
+        $actionsItem = $this->modx->getOption('user_actions_item', $this->discuss->forumConfig, 'sample.userActionItem');
         $actions = array();
         $i = 0;
         foreach ($this->publicActions as $key => $action) {
@@ -83,7 +84,7 @@ class disUserController extends disWebController {
             ));
             $i++;
         }
-        $this->modx->setPlaceholder('discuss2.user.public_actions', $this->discuss->getChunk($actionsContainer, implode("\n", $actions)));
+        $this->modx->setPlaceholder('discuss2.user.public_actions', $this->discuss->getChunk($actionsContainer, array('actions' => implode("\n", $actions))));
         $actions = array();
         $i = 0;
         if ($this->modx->user->id == $this->user->id) {
@@ -99,7 +100,7 @@ class disUserController extends disWebController {
                 ));
                 $i++;
             }
-            $this->modx->setPlaceholder('discuss2.user.private_actions', $this->discuss->getChunk($actionsContainer, implode("\n", $actions)));
+            $this->modx->setPlaceholder('discuss2.user.private_actions', $this->discuss->getChunk($actionsContainer, array('actions' => implode("\n", $actions))));
         }
         $actions = array();
         $i = 0;
@@ -116,7 +117,7 @@ class disUserController extends disWebController {
                 ));
                 $i++;
             }
-            $this->modx->setPlaceholder('discuss2.user.moderator_actions', $this->discuss->getChunk($actionsContainer, implode("\n", $actions)));
+            $this->modx->setPlaceholder('discuss2.user.moderator_actions', $this->discuss->getChunk($actionsContainer, array('actions' => implode("\n", $actions))));
         }
     }
 }

@@ -6,7 +6,8 @@ if ($modx->getOption('friendly_urls') == false) {
 switch ($modx->event->name) {
     case 'OnPageNotFound' :
         $request = $modx->getRequest();
-        if ($request){
+
+        if ($modx->request){
             $url = $modx->request->getResourceIdentifier($modx->request->getResourceMethod());
             $url = rtrim($url, $modx->getOption('container_suffix', null, '/'));
             $alias = null;
@@ -19,10 +20,9 @@ switch ($modx->event->name) {
             // TODO: Implement better controller behavior. This one literally smell bit of bubblegum
             // Check if user or moderator page
             foreach ($userPages as $uPage) {
-                $uUrl = $modx->makeUrl($uPage);
+                $uUrl = $modx->discuss2->makeUrl($uPage);
                 if (strpos($url, $uUrl) === 0) {
                     $alias = rtrim(substr($url, 0, strlen($uUrl)), '/');
-
                     if (strpos($url, '/', strlen($uUrl)) !== false) {
                         $uname = trim(substr($url, strlen($alias) +1, strpos($url, "/", strlen($alias) + 1) - (strlen($alias) + 1)), '/');
                         $action = trim(substr($url, (strlen($alias) +1) + strlen($uname)), '/');
@@ -36,7 +36,7 @@ switch ($modx->event->name) {
                 }
             }
             foreach ($modPages as $mPage) {
-                $mUrl = $modx->makeUrl($mPage);
+                $mUrl = $modx->discuss2->makeUrl($mPage);
                 if (strpos($url, $mUrl) === 0) {
                     $controller = 'moderator';
                 }
@@ -50,7 +50,6 @@ switch ($modx->event->name) {
             $modx->request->parameters['GET']['action'] = $action;
             $modx->request->paremeters['GET'][$modx->request->getResourceMethod()] = rtrim($alias, "/");
             $modx->request->paremeters['REQUEST'][$modx->request->getResourceMethod()] = rtrim($alias, "/");
-
             if (!$id = $modx->findResource($alias.'/')) {
                 break;
             }

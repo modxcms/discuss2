@@ -1,9 +1,8 @@
 <?php
 
 class disPreProcessor extends modProcessor {
-    protected $classKey = null;
     protected $visibility = 'public';
-    public $object = null;
+    protected $data = null;
     public $discuss = null;
 
     public function initialize() {
@@ -25,6 +24,7 @@ class disPreProcessor extends modProcessor {
                     return false;
                 }
         }
+        return true;
     }
 
     public function process() {}

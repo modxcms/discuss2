@@ -32,6 +32,13 @@
         <composite alias="Activity" class="disUserActivity" local="id" foreign="internalKey" cardinality="many" owner="local" />
         <composite alias="Attachment" class="disPostAttachment" local="id" foreign="internalKey" cardinality="many" owner="local"/>
     </object>
+    <object class="disUserMessage" extends="modUserMessage">
+        <composite alias="Thread" class="disUserThread" local="id" foreign="message_id" cardinality="one" owner="local" />
+    </object>
+    <object class="disUserThread" table="user_thread" extends="xPDOObject">
+        <field key="thread" dbtype="int" precision="11" phptype="integer" attributes="unsigned" null="false"/>
+        <field key="message_id" dbtype="int" precision="11" phptype="integer" attributes="unsigned" null="false" />
+    </object>
     <object class="disUserProfile" table="user_profile" extends="xPDOObject">
         <field key="internalKey" dbtype="int" precision="11" phptype="integer" attributes="unsigned" null="false" index="pk" /> <!-- xPDOObject bug with PK fix -->
         <field key="firstname" dbtype="varchar" precision="64" phptype="string" default="" null="false" />

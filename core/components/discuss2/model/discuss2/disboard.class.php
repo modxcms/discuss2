@@ -28,7 +28,7 @@ class disBoard extends modResource {
         $x = &$this->xpdo;
         $usrLogin = (int)$x->getOption('login_page', $x->discuss2->forumConfig, 1);
         if ($this->xpdo->hasPermission('discuss2.can_post')) {
-            $links['actions.new_thread'] = $x->makeUrl($this->id, '', array('action' => 'new/thread'));
+            $links['actions.new_thread'] = $x->discuss2->makeUrl($this->id, '', 'new/thread');
         } else {
             $links['actions.login'] = $x->makeUrl($usrLogin);
         }
@@ -37,25 +37,25 @@ class disBoard extends modResource {
 
     public function getThreadActions($thread) {
         $x = &$this->xpdo;
-        $actionChunk = $x->getOption('thread_actions_item', $x->discuss->forumConfig, 'thread.actionsItem');
+        $actionChunk = $x->getOption('thread_actions_item', $x->discuss->forumConfig, 'sample.actionsItem');
         if ($x->hasPermission('discuss2.remove_thread')) {
             $this->actionLinks['actions.remove_thread'] = $x->discuss2->getChunk($actionChunk, array(
-                'link' => $x->makeUrl($this->id, '', array('action' => 'remove/thread', 'tid' => $thread)),
+                'link' => $x->discuss2->makeUrl($this->id, '', 'remove/thread', array('tid' => $thread)),
                 'text' => $x->lexicon('discuss2.remove_thread')));
         }
         if ($x->hasPermission('discuss2.lock_thread')) {
             $this->actionLinks['actions.lock_thread'] = $x->discuss2->getChunk($actionChunk, array(
-                'link' => $x->makeUrl($this->id, '', array('action' => 'lock/thread', 'tid' => $thread)),
+                'link' => $x->discuss2->makeUrl($this->id, '','lock/thread', array('tid' => $thread)),
                 'text' => $x->lexicon('discuss2.lock_thread')));
         }
         if ($x->hasPermission('discuss2.modify_thread')) {
             $this->actionLinks['actions.modify_thread'] = $x->discuss2->getChunk($actionChunk, array(
-                'link' => $x->makeUrl($this->id, '', array('action' => 'modify/thread', 'tid' => $thread)),
+                'link' => $x->discuss2->makeUrl($this->id, '', 'modify/thread', array('tid' => $thread)),
                 'text' => $x->lexicon('discuss2.edit_thread')));
         }
         if ($x->hasPermission('discuss2.stick_thread')) {
             $this->actionLinks['actions.stick_thread'] = $x->discuss2->getChunk($actionChunk, array(
-                'link' => $x->makeUrl($this->id, '', array('action' => 'pin/thread', 'tid' => $thread)),
+                'link' => $x->discuss2->makeUrl($this->id, '', 'pin/thread', array('tid' => $thread)),
                 'text' => $x->lexicon('discuss2.pin_thread')));
         }
         return $this->actionLinks;
@@ -145,7 +145,7 @@ class disBoard extends modResource {
                             'preview.content' => $parser->parse($this->xpdo->request->parameters['POST']['content'])
                         ), 'form');
                     }
-                    $contentChunk = $this->xpdo->getOption('new_thread_form', $this->xpdo->discuss2->forumConfig, 'thread.newThread');
+                    $contentChunk = $this->xpdo->getOption('new_thread_form', $this->xpdo->discuss2->forumConfig, 'sample.newThread');
                     break;
                 case 'remove/thread' :
                     if (!isset($this->xpdo->request->parameters['GET']['tid'])) {
@@ -153,11 +153,11 @@ class disBoard extends modResource {
                     }
                     $obj = $this->xpdo->getObject('disThread', $this->xpdo->request->parameters['GET']['tid']);
                     $obj->content = $parser->parse($obj->content);
-                    $contentChunk = $this->xpdo->getOption('remove_thread_form', $this->xpdo->discuss2->forumConfig, 'thread.removeThread');
+                    $contentChunk = $this->xpdo->getOption('remove_thread_form', $this->xpdo->discuss2->forumConfig, 'sample.removeThread');
                     $placeholders = array(
                         'params'  => $this->xpdo->request->parameters,
                         'thread' => $obj->toArray(),
-                        'action' => $this->xpdo->makeUrl($this->xpdo->resource->id, '', array('action' => 'remove/thread', 'tid' => $this->xpdo->request->parameters['GET']['tid']))
+                        'action' => $this->xpdo->makeUrl($this->xpdo->resource->id, '', 'remove/thread', array('tid' => $this->xpdo->request->parameters['GET']['tid']))
                     );
                     break;
                 case 'modify/thread' :
@@ -165,11 +165,11 @@ class disBoard extends modResource {
                         break;
                     }
                     $obj = $this->xpdo->getObject('disThread', $this->xpdo->request->parameters['GET']['tid']);
-                    $contentChunk = $this->xpdo->getOption('edit_thread_form', $this->xpdo->discuss2->forumConfig, 'thread.editThread');
+                    $contentChunk = $this->xpdo->getOption('edit_thread_form', $this->xpdo->discuss2->forumConfig, 'sample.editThread');
                     $placeholders = array(
                         'params'  => $this->xpdo->request->parameters,
                         'thread' => $obj->toArray(),
-                        'action' => $this->xpdo->makeUrl($this->xpdo->resource->id, '', array('action' => 'modify/thread', 'tid' => $this->xpdo->request->parameters['GET']['tid']))
+                        'action' => $this->xpdo->makeUrl($this->xpdo->resource->id, '', 'modify/thread', array('tid' => $this->xpdo->request->parameters['GET']['tid']))
                     );
                     break;
             }
@@ -298,7 +298,7 @@ class disBoard extends modResource {
     }
 
     private function _getSubBoards() {
-        $subBoardContainer = $this->xpdo->getOption('subboard_container', $this->xpdo->discuss2->forumConfig, 'board.subboardcontainer');
+        $subBoardContainer = $this->xpdo->getOption('subboard_container', $this->xpdo->discuss2->forumConfig, 'sample.subboardcontainer');
 
         // Keeping query bit more lighweight and stripping of unnecessary fields
         $fieldsToLoad = array('id', 'pagetitle', 'longtitle', 'description', 'parent',
@@ -377,13 +377,13 @@ class disBoard extends modResource {
 
     private function _treeToView($tree) {
         $threads = array();
-        $threadRow = $this->xpdo->getOption('thread_row_chunk', $this->xpdo->discus2s->forumConfig, 'board.threadRow');
-        $threadsContainer = $this->xpdo->getOption('thread_row_container', $this->xpdo->discuss2->forumConfig, 'board.threadContainer');
+        $threadRow = $this->xpdo->getOption('thread_row_chunk', $this->xpdo->discus2s->forumConfig, 'sample.threadRow');
+        $threadsContainer = $this->xpdo->getOption('thread_row_container', $this->xpdo->discuss2->forumConfig, 'sample.threadContainer');
         $pages = $this->xpdo->discuss2->loadPagination();
         $perPage = $this->xpdo->getOption('threads_per_page', $this->xpdo->discuss2->forumConfig, '20');
         $parser = $this->xpdo->discuss2->loadParser();
 
-        $actionsContainer = $this->xpdo->getOption('thread_actions_container', $this->xpdo->discuss2->forumConfig, 'thread.actionsContainer');
+        $actionsContainer = $this->xpdo->getOption('thread_actions_container', $this->xpdo->discuss2->forumConfig, 'sample.actionsContainer');
 
         foreach ($tree as $thread) {
             if (isset($thread['disPost'])) {
@@ -395,7 +395,7 @@ class disBoard extends modResource {
                 $thread['lastpost.author_id'] = $lastPost['author'];
                 $thread['lastpost.author_username'] = ($lastPost['use_display_name'] == 1) ? $lastPost['display_name'] : $lastPost['username'];
                 $thread['lastpost.createdon'] = $lastPost['createdon'];
-                $thread['link'] = $this->xpdo->makeUrl($thread['id']);
+                $thread['link'] = $this->xpdo->discuss2->makeUrl($thread['id']);
                 $thread['lastpost.link'] = $this->xpdo->discuss2->getLastPostLink($thread['id'], $thread['lastpost.id']);
                 if ($thread['posts'] > $perPage) {
                     $thread['thread_pagination'] = $pages->processThreadPagination($thread['id'], $thread['posts'], 'posts_per_page');
@@ -410,7 +410,7 @@ class disBoard extends modResource {
     }
 
     private function _subTreeToView($tree) {
-        $subBoardRow = $this->xpdo->getOption('subboard_row', $this->xpdo->discuss2->forumConfig, 'board.subboardrow');
+        $subBoardRow = $this->xpdo->getOption('subboard_row', $this->xpdo->discuss2->forumConfig, 'sample.subboardrow');
         $boards = array();
         $parser = $this->xpdo->discuss2->loadParser();
         foreach ($tree as $board) {
@@ -424,7 +424,7 @@ class disBoard extends modResource {
                 $board['lastpost.author_username'] = ($lastPost['use_display_name'] == 1) ? $lastPost['display_name'] : $lastPost['username'];
                 $board['lastpost.link'] = $this->xpdo->discuss2->getLastPostLink($lastPost['thread_id'], $lastPost['id']);
             }
-            $board['link'] = $this->xpdo->makeUrl($board['id']);
+            $board['link'] = $this->xpdo->discuss2->makeUrl($board['id']);
             // TODO: Add read/undead threads check
             $boards[] = $this->xpdo->discuss2->getChunk($subBoardRow,$board);
         }
