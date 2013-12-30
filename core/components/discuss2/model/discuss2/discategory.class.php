@@ -241,7 +241,7 @@ class disCategory extends modResource {
             $closure = $this->xpdo->newObject('disClosure');
             $closSaved = $closure->createClosure(intval($this->id), intval($this->parent));
             $resGroup = $this->_saveModGroup();
-            $this->joinGroup($resGroup->id);
+            $this->joinGroup($resGroup);
         } else if ($saved) {
             if ($this->parentChanged !== null) {
                 // TODO: Add category move to fire closure changes

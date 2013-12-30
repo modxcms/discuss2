@@ -56,16 +56,14 @@ switch ($modx->event->name) {
 
             $obj = $modx->request->getResource('id', $id);
             if (is_object($obj) && $obj instanceof modResource) {
-                $modx->resource = &$obj;
+                $modx->resource = $obj;
                 if (in_array($obj->class_key, array('disThread', 'disThreadDiscussion', 'disThreadQuestion', 'disBoard', 'disForum'))) {
                     $modx->discuss2->init();
                 } else if ($controller !== null) {
                     $modx->discuss2->runFrontController($controller);
                 }
-
                 $modx->request->prepareResponse();
             }
-
             break;
         }
 }

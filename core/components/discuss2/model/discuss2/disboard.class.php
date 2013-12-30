@@ -440,7 +440,7 @@ class disBoard extends modResource {
             $closure = $this->xpdo->newObject('disClosure');
             $closSaved = $closure->createClosure(intval($this->id), intval($this->parent));
             $resGroup = $this->_saveModGroup();
-            $this->joinGroup($resGroup->id);
+            $this->joinGroup($resGroup);
             $cm = $this->xpdo->getCacheManager();
             $cm->refresh();
         } else if ($saved) {

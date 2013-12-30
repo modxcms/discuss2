@@ -3,15 +3,16 @@
  * @package Discuss
  * @subpackage mysql
  */
-$xpdo_meta_map['disSubscription']= array (
+$xpdo_meta_map['disUserThreadParticipant']= array (
   'package' => 'discuss2',
   'version' => '1.1',
-  'table' => 'thread_subscriptions',
+  'table' => 'user_thread_participants',
   'extends' => 'xPDOObject',
   'fields' => 
   array (
     'thread' => NULL,
-    'user' => NULL,
+    'userid' => NULL,
+    'lastread' => '0',
   ),
   'fieldMeta' => 
   array (
@@ -24,7 +25,7 @@ $xpdo_meta_map['disSubscription']= array (
       'null' => false,
       'index' => 'pk',
     ),
-    'user' => 
+    'userid' => 
     array (
       'dbtype' => 'int',
       'precision' => '11',
@@ -32,6 +33,13 @@ $xpdo_meta_map['disSubscription']= array (
       'attributes' => 'unsigned',
       'null' => false,
       'index' => 'pk',
+    ),
+    'lastread' => 
+    array (
+      'dbtype' => 'timestamp',
+      'phptype' => 'datetime',
+      'null' => false,
+      'default' => '0',
     ),
   ),
   'indexes' => 
@@ -50,10 +58,26 @@ $xpdo_meta_map['disSubscription']= array (
           'length' => '',
           'null' => false,
         ),
-        'user' => 
+        'userid' => 
         array (
           'collation' => 'A',
           'length' => '',
+          'null' => false,
+        ),
+      ),
+    ),
+    'read_idx' => 
+    array (
+      'alias' => 'read',
+      'primary' => false,
+      'unique' => false,
+      'type' => 'BTREE',
+      'columns' => 
+      array (
+        'lastread' => 
+        array (
+          'length' => '',
+          'collation' => 'A',
           'null' => false,
         ),
       ),

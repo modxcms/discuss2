@@ -15,7 +15,8 @@ $xpdo_meta_map = array (
     5 => 'disThreadParticipant',
     6 => 'disThreadRead',
     7 => 'disSubscription',
-    8 => 'disThreadProperty',
+    8 => 'disUserThreadParticipant',
+    9 => 'disThreadProperty',
   ),
   'modResource' => 
   array (
@@ -33,7 +34,9 @@ $xpdo_meta_map = array (
   'xPDOSimpleObject' => 
   array (
     0 => 'disPostAttachment',
-    1 => 'disForumActivity',
-    2 => 'disUserActivity',
+    1 => 'disUserThread',
+    2 => 'disUserThreadPost',
+    3 => 'disForumActivity',
+    4 => 'disUserActivity',
   ),
 );

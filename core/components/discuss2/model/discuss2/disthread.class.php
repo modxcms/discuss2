@@ -196,7 +196,7 @@ class disThread extends modResource {
         if ($x->hasPermission('discuss2.modify_post') || $userId == $this->xpdo->user->id) {
             $links['actions.modify_post'] = $x->discuss2->getChunk($actionChunk, array(
                 'link' => $x->discuss2->makeUrl($this->id, '', 'modify/post', array('pid' => $postId)),
-                'text' => $x->discuss2->lexicon('discuss2.edit_post')));
+                'text' => $x->lexicon('discuss2.edit_post')));
         }
         return $links;
     }

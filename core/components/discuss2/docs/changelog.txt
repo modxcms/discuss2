@@ -1,0 +1,5 @@
+Changelog for Discuss2
+
+Discuss2 0.6-alpha, December 30, 2013
+===============================================
+First Alpha Package
