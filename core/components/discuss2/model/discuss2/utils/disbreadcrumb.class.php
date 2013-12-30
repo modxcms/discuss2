@@ -22,8 +22,8 @@ class disBreadcrumb {
         if (count($pathItems) == 0) {
             return ;
         }
-        $container = $this->modx->getOption('breadcrumbs_container', $this->discuss->forumConfig, 'breadcrumb.breadcrumbContain');
-        $bcItem = $this->modx->getOption('breadcrumbs_item', $this->discuss->forumConfig, 'breadcrumb.breadcrumbItem');
+        $container = $this->modx->getOption('breadcrumbs_container', $this->discuss->forumConfig, 'sample.breadcrumbContainer');
+        $bcItem = $this->modx->getOption('breadcrumbs_item', $this->discuss->forumConfig, 'sample.breadcrumbItem');
         $i = 0;
         foreach ($pathItems as $item) {
             $classes = array('item');
@@ -38,7 +38,7 @@ class disBreadcrumb {
             $crumbs[] = $this->discuss->getChunk($bcItem,
                 array('classes' => implode(' ', $classes),
                 'text' => $item->pagetitle,
-                'link' => $this->modx->makeUrl($item->id)));
+                'link' => $this->modx->discuss2->makeUrl($item->id)));
         }
         $trail = $this->discuss->getChunk($container, array('trail' => implode("", $crumbs)));
         $this->modx->setPlaceholder('discuss2.trail', $trail);

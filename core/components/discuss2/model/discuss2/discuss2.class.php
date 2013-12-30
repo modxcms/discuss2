@@ -11,6 +11,7 @@ class Discuss2 {
     public $stats = null;
     public $pagination = null;
     public $breadcrumb = null;
+    public $controller = null;
 
     private $_cacheOptions = array();
 
@@ -35,6 +36,7 @@ class Discuss2 {
             'chunksPath' => $corePath.'elements/chunks/',
             'chunkSuffix' => '.chunk.tpl',
             'processorsPath' => $corePath.'processors/',
+            'frontControllerPath' => $corePath.'controllers/web/'
         ),$config);
     }
 
@@ -46,6 +48,8 @@ class Discuss2 {
             $this->stats->process();
         }
         $this->buildPath();
+        $this->modx->toPlaceholders($this->user->toArray(), 'discuss2.user');
+        $this->modx->toPlaceholders($this->forumConfig, 'discuss2.properties');
     }
 
     public function buildPath() {
@@ -70,25 +74,11 @@ class Discuss2 {
         return $conditions;
     }
 
-    /** Deprecated,
-     * User getMergeConfig */
-    public function getResourceForum($resourceId) {
-        $c = $this->modx->newQuery('disForum');
-        $c->innerJoin('disClosure', 'c', "disForum.id = c.ancestor AND c.descendant = {$this->modx->quote($resourceId)}");
-        $c->where(array('class_key' => 'disForum'));
-        $c->prepare();
-        $obj = $this->modx->getObject('disForum', $c);
-        if (!$obj instanceof disForum) {
-            $this->modx->log(xPDO::LOG_LEVEL_ERROR, 'Could not fetch Discuss2 forum resource for resource id : ' . $resourceId);
-        }
-        return $obj;
-    }
-
     public function closestConfigParent($resourceId) {
         $c = $this->modx->newQuery('disForum');
         $c->select(array('id', 'class_key'));
         $c->innerJoin('disClosure', 'c', "disForum.id = c.ancestor AND c.descendant = {$resourceId}");
-        $c->where(array('class_key' => 'disBoard'));
+        $c->where(array('class_key:IN' => array('disBoard', 'disCategory', 'disForum')));
         $c->limit(1);
         $c->prepare();
         $c->stmt->execute();
@@ -138,7 +128,7 @@ class Discuss2 {
         if (!isset($this->chunks[$name])) {
             $chunk = $this->modx->getObject('modChunk',array('name' => $name),true);
             if (empty($chunk)) {
-                $chunk = $this->_getTplChunk($name);
+                $chunk = $this->_getTplChunk($name,$this->config['chunkSuffix']);
                 if ($chunk == false) return false;
             }
             $this->chunks[$name] = $chunk->getContent();
@@ -156,19 +146,13 @@ class Discuss2 {
      *
      * @access private
      * @param string $name The name of the Chunk. Will parse to name.chunk.tpl
+     * @param string $suffix
      * @return modChunk/boolean Returns the modChunk object if found, otherwise
      * false.
      */
-    private function _getTplChunk($name) {
+    private function _getTplChunk($name,$suffix = '.chunk.tpl') {
         $chunk = false;
-        if (strpos($name, '.') !== false) {
-            $path = str_replace('.', '/', $name);
-            $name = substr($name, strrpos($name, '/'));
-        } else {
-            $path = $name;
-        }
-
-        $f = $this->config['chunksPath'].strtolower($path).'.chunk.tpl';
+        $f = $this->config['chunksPath'].strtolower($name).$suffix;
         if (file_exists($f)) {
             $o = file_get_contents($f);
             $chunk = $this->modx->newObject('modChunk');
@@ -179,16 +163,16 @@ class Discuss2 {
     }
 
     public function getLastPostLink($threadId, $postId) {
-        $posts = $this->modx->getObject('disThreadStatistics', $threadId);
+        $posts = $this->modx->getObject('disThreadProperty', $threadId);
         if ($posts instanceof xPDOObject) {
             $perPage = $this->forumConfig['posts_per_page'];
             if ($posts->posts <= $perPage) {
-                return $this->modx->makeUrl($threadId) . "#post-{$postId}";
+                return $this->makeUrl($threadId) . "#post-{$postId}";
 
             }
             $pages = ceil($posts/$perPage);
 
-            return $this->modx->makeUrl($threadId, '', array('page' => $pages)) . "#post-{$postId}";
+            return $this->makeUrl($threadId, '', array('page' => $pages)) . "#post-{$postId}";
         }
     }
 
@@ -206,14 +190,39 @@ class Discuss2 {
      */
     public function runProcessor($action = '',$scriptProperties = array(),$options = array()) {
         $options['processors_path'] = $this->config['processorsPath'];
+        $options['processors_path'] .= isset($options['context']) ? $options['context'] ."/" : 'web/';
+        $options['processors_path'] .= isset($options['target']) ? $options['target'] ."/" : 'postprocessors/';
         return $this->modx->runProcessor($action, $scriptProperties, $options);
+    }
+
+    public function runFrontController($controller) {
+        $class = $this->modx->loadClass('dis'. ucfirst($controller).'Controller', $this->config['frontControllerPath'], false, true);
+        $this->controller = new $class($this->modx);
+        $this->controller->render();
+    }
+
+    public function makeUrl($id, $action = '', $options = array()) {
+        if ($this->modx->getOption('friendly_url') == true && $action !== '') {
+            $url = $this->modx->makeUrl($id) . "/" . $action;
+            $use_xhtml = $this->modx->getOption('xhtml_urls');
+            if ($use_xhtml == true) {
+                $url .= "?" . http_build_query($options, '', '&amp;');
+            } else {
+                $url .= "?" . http_build_query($options);
+            }
+
+        } else {
+            $url = $this->modx->makeUrl($id, '', $options);
+        }
+        return $url;
     }
 
     public function loadConfig($id = null) {
         if (!empty($this->forumConfig)) {
             return $this->forumConfig;
-        }
-        if ($this->modx->resource->class_key == 'disPost' || $this->modx->resource instanceof disThread ) {
+        }if ($id !== null) {
+            $configToLoad = $this->closestConfigParent($id);
+        } else if ($this->modx->resource->class_key == 'disPost' || $this->modx->resource instanceof disThread ) {
             $configToLoad = $this->closestConfigParent($this->modx->resource->id);
         } else {
             $configToLoad = array('id' => $this->modx->resource->id, 'class_key' => $this->modx->resource->class_key);
@@ -222,10 +231,13 @@ class Discuss2 {
         if (!$config = $this->modx->getCacheManager()->get("discuss2/configurations/{$configToLoad['class_key']}/{$configToLoad['class_key']}-{{$configToLoad['id']}}")) {
             $properties = $this->getMergeConfig($this->modx->resource->id);
 
-            $this->forumConfig = $this->modx->fromJSON($properties);
+            $this->forumConfig = $properties;
             $this->writeConfig($properties, $configToLoad['class_key'], $configToLoad['id']);
         }  else {
-            $this->forumConfig = $this->modx->fromJSON($config);
+            if (!is_array($config)) {
+                $this->forumConfig = $this->modx->fromJSON($config);
+            }
+            $this->forumConfig = $config;
         }
 
         return $this->forumConfig;
@@ -253,10 +265,7 @@ class Discuss2 {
         }
         return $this->stats;
     }
-    /**
-     * @param mixed $forum
-     * @return bool
-     */
+
     public function writeConfig($properties, $class, $id) {
         $cm = $this->modx->getCacheManager();
         if (is_string($properties)) {
@@ -290,6 +299,11 @@ class Discuss2 {
 
     public function hydrateRow($row, &$instances = array(), $slices = 0) {
         $classAlias = substr(key($row), 0, strpos(key($row), '_'));
+        if ($row[$classAlias."_id"] == false && count($row) < $slices) {
+            return ;
+        } else if ($row[$classAlias."_id"] == false && count($row) > $slices) {
+            $this->hydrateRow(array_slice($row, $slices), $instances, $slices);
+        }
         $i = 0;
         if (!isset($row["{$classAlias}_id"])) {
             if ($slices < count($row)) {
@@ -324,8 +338,9 @@ class Discuss2 {
             $parentId = $temp['parent'];
         }
         $result = array();
+
         foreach($itemList as $item) {
-            if ($item['parent'] == $parentId) {
+            if ($item['parent'] == $parentId && $item['id'] != false) {
                 $children = $this->createTree($itemList, $item['id']);
                 if ($children) {
                     foreach ($children as $child) {
@@ -333,6 +348,8 @@ class Discuss2 {
                     }
                 }
                 $result[] = $item;
+            } else {
+
             }
         }
         return empty($result) ? false : $result;

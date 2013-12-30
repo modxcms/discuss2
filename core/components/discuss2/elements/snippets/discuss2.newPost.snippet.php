@@ -1,5 +1,5 @@
 <?php
-$response = $modx->discuss2->runProcessor('web/post/new', $hook->getValues());
+$response = $modx->discuss2->runProcessor('post/new', $hook->getValues());
 
 if ($response->isError()) {
     return $response->getMessage();

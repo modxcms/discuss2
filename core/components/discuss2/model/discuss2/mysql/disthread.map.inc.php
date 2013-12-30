@@ -40,7 +40,7 @@ $xpdo_meta_map['disThread']= array (
     ),
     'Views' => 
     array (
-      'class' => 'disThreadStatistics',
+      'class' => 'disThreadProperty',
       'local' => 'id',
       'foreign' => 'id',
       'owner' => 'local',

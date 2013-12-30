@@ -16,6 +16,9 @@ class disPagination {
     public function processMainPagination($count, $perPageVar) {
         $page = isset($this->modx->request->parameters['GET']['page']) ? $this->modx->request->parameters['GET']['page'] : 1;
         $perPage = $this->discuss->forumConfig[$perPageVar];
+        if ($count < $perPage) {
+            return ;
+        }
         $pages = ceil($count / $perPage);
 
         if ($pages <= 1) {
@@ -88,26 +91,29 @@ class disPagination {
 
         $pageVar = $this->modx->getOption('pagination_var', $this->discuss->forumConfig, 'page');
 
-        $container = $this->modx->getOption('pagination_container', $this->discuss->forumConfig, 'pagination.container');
-        $item = $this->modx->getOption('pagination_item_chunk', $this->discuss->forumConfig, 'pagination.item');
-        $emptyitem = $this->modx->getOption('pagination_empty_item_chunk', $this->discuss->forumConfig, 'pagination.empty_item');
+        $container = $this->modx->getOption('pagination_container', $this->discuss->forumConfig, 'sample.container');
+        $item = $this->modx->getOption('pagination_item_chunk', $this->discuss->forumConfig, 'sample.item');
+        $emptyitem = $this->modx->getOption('pagination_empty_item_chunk', $this->discuss->forumConfig, 'sample.empty_item');
         foreach($links as $link) {
             if (is_array($link)) {
                 if ($link['target'] == null) {
                     $temp[] = $this->discuss->getChunk($emptyitem, array(
-                        'text' => $link['text']
+                        'text' => $link['text'],
+                        'class' => 'empty'
                     ));
                 } else {
                     $temp[] = $this->discuss->getChunk($item, array(
-                        'link' => $this->modx->makeUrl($resourceId, '', array($pageVar => $link['target'])),
-                        'text' => $link['text']
+                        'link' => $this->modx->discuss2->makeUrl($resourceId, '', '',array($pageVar => $link['target'])),
+                        'text' => $link['text'],
+                        'class' => $link['class']
                     ));
                 }
 
             } else {
-                $temp[] = $this->discuss->getChunk('pagination.item', array(
-                    'link' => $this->modx->makeUrl($resourceId, '', array($pageVar => $link)),
-                    'text' => $link
+                $temp[] = $this->discuss->getChunk($item, array(
+                    'link' => $this->modx->discuss2->makeUrl($resourceId, '','',array($pageVar => $link)),
+                    'text' => $link,
+                    'class' => 'pagination-item'
                 ));
             }
         }
@@ -117,6 +123,10 @@ class disPagination {
     }
 
     public function processThreadPagination($resource, $count, $perPageVar) {
+        $container = $this->modx->getOption('pagination_container', $this->discuss->forumConfig, 'sample.container');
+        $item = $this->modx->getOption('pagination_item_chunk', $this->discuss->forumConfig, 'sample.item');
+        $emptyitem = $this->modx->getOption('pagination_empty_item_chunk', $this->discuss->forumConfig, 'sample.empty_item');
+
         $page = 1;
         $perPage = $this->discuss->forumConfig[$perPageVar];
         $pages = ceil($count / $perPage);
@@ -159,24 +169,24 @@ class disPagination {
         foreach($links as $link) {
             if (is_array($link)) {
                 if ($link['target'] == null) {
-                    $temp[] = $this->discuss->getChunk('pagination.thread.emptyItem', array(
+                    $temp[] = $this->discuss->getChunk($emptyitem, array(
                         'text' => $link['text']
                     ));
                 } else {
-                    $temp[] = $this->discuss->getChunk('pagination.thread.item', array(
-                        'link' => $this->modx->makeUrl($resourceId, '', array($pageVar => $link['target'])),
+                    $temp[] = $this->discuss->getChunk($item, array(
+                        'link' => $this->modx->discuss2->makeUrl($resourceId, '', '', array($pageVar => $link['target'])),
                         'text' => $link['text']
                     ));
                 }
 
             } else {
-                $temp[] = $this->discuss->getChunk('pagination.thread.item', array(
-                    'link' => $this->modx->makeUrl($resourceId, '', array($pageVar => $link)),
+                $temp[] = $this->discuss->getChunk($item, array(
+                    'link' => $this->modx->discuss2->makeUrl($resourceId, '', '', array($pageVar => $link)),
                     'text' => $link['text']
                 ));
             }
         }
-        return $this->discuss->getChunk('pagination.thread.container', array(
+        return $this->discuss->getChunk($container, array(
             'links' => implode("\n", $temp)
         ));
     }

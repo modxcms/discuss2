@@ -65,4 +65,15 @@ class disStats {
         }
         return $out;
     }
+
+    public function getRepliesAndViews($id) {
+        $c = $this->modx->newQuery('disThreadProperty');
+        $c->select(array($this->modx->getSelectColumns('disThreadProperty', '', '', array('views', 'posts'))));
+        $c->where(array('idx'=> $id));
+        $c->prepare();
+        $c->stmt->execute();
+        $row = $c->stmt->fetch(PDO::FETCH_ASSOC);
+        $c->stmt->closeCursor();
+        return $row;
+    }
 }

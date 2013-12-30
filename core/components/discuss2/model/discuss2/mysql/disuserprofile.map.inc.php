@@ -19,7 +19,7 @@ $xpdo_meta_map['disUserProfile']= array (
     'show_email' => 0,
     'show_online' => 0,
     'display_name' => '',
-    'user_display_name' => 0,
+    'use_display_name' => 0,
   ),
   'fieldMeta' => 
   array (
@@ -92,7 +92,7 @@ $xpdo_meta_map['disUserProfile']= array (
       'phptype' => 'string',
       'default' => '',
     ),
-    'user_display_name' => 
+    'use_display_name' => 
     array (
       'dbtype' => 'tinyint',
       'precision' => '1',

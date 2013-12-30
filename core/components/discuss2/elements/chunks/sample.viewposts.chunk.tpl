@@ -1,0 +1,3 @@
+ROWS
+[[+pagetitle]]
+[[+rows]]

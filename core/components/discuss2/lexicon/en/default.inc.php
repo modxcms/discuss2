@@ -108,11 +108,6 @@ $_lang['discuss2.pagination_previous_class'] = 'Previous Item Class';
 $_lang['discuss2.pagination_next_class'] = 'Next Item Class';
 $_lang['discuss2.pagination_active_class'] = 'Active Item Class';
 
-//Breadcrumbs
-$_lang['discuss2.breadcrumbs'] = 'Breadcrumbs';
-$_lang['discuss2.breadcrumbs_container'] = 'Container chunk for breadcrumb items';
-$_lang['discuss2.breadcrumbs_item'] = 'Item chunk for breadcrumb container';
-
 // Users
 $_lang['discuss2.users'] = 'Users';
 $_lang['discuss2.show_online'] = 'Show Online Status';
@@ -129,6 +124,11 @@ $_lang['discuss2.notifications_email'] = 'User Notifications Email Chunk';
 $_lang['discuss2.notifications_email_desc'] = 'Email template chunk used for user notifications.';
 $_lang['discuss2.notifications_subject'] = 'User Notifications Email Subject';
 $_lang['discuss2.notifications_subject_desc'] = 'Notification email subject line.';
+$_lang['discuss2.user_pages'] = 'User pages';
+$_lang['discuss2.login_page'] = 'Login Page';
+$_lang['discuss2.login_page_desc'] = 'Login page resource ID';
+$_lang['discuss2.profile_page'] = 'Profile Page';
+$_lang['discuss2.profile_page_desc'] = 'Profile page resource ID';
 
 // General
 $_lang['discuss2.general'] = 'General';
@@ -156,6 +156,48 @@ $_lang['discuss2.category_language_desc'] = 'Category specific language. By defa
 $_lang['discuss2.time_format_category'] = 'Time Format';
 $_lang['discuss2.time_format_category_desc'] = 'Category wide time format. By default inherits from forum where category resides.';
 
+// Forms
+$_lang['discuss2.forms'] = "Forms";
+$_lang['discuss2.forms.thread_forms'] = "Thread Forms";
+$_lang['discuss2.forms.new_thread_form'] = "New Thread";
+$_lang['discuss2.forms.new_thread_form_desc'] = "Form chunk for new thread";
+$_lang['discuss2.forms.edit_thread_form'] = "Edit Thread";
+$_lang['discuss2.forms.edit_thread_form_desc'] = "Form chunk for edit thread";
+$_lang['discuss2.forms.remove_thread_form'] = "Remove Thread";
+$_lang['discuss2.forms.remove_thread_form_desc'] = "Form/Page chunk for remove thread";
+$_lang['discuss2.forms.new_thread_desc_form'] = "Form chunk for new thread";
+$_lang['discuss2.forms.split_thread_form'] = "Split Thread";
+$_lang['discuss2.forms.split_thread_form_desc'] = "Form chunk for creating split thread";
+
+$_lang['discuss2.forms.post_forms'] = "Post Forms";
+$_lang['discuss2.forms.new_post'] = "New Post";
+$_lang['discuss2.forms.new_post_desc'] = "Form chunk for new post/reply to thread";
+$_lang['discuss2.forms.edit_post'] = "Edit Post";
+$_lang['discuss2.forms.edit_post_desc'] = "Form chunk for edit post";
+$_lang['discuss2.forms.remove_post'] = "Remove Post";
+$_lang['discuss2.forms.edit_post_desc'] = "Form/Page chunk for remove post";
+
+$_lang['discuss2.forms.user_forms'] = "User Forms";
+
+
+// Misc Chunks
+$_lang['discuss2.misc_chunks'] = "Miscellaneous Chunks";
+
+$_lang['discuss2.breadcrumbs'] = 'Breadcrumbs';
+$_lang['discuss2.breadcrumbs_container'] = 'Container chunk for breadcrumb items';
+$_lang['discuss2.breadcrumbs_item'] = 'Item chunk for breadcrumb container';
+
+$_lang['discuss2.action_chunks'] = 'Action Chunks';
+$_lang['discuss2.thread_actions_container'] = 'Thread Actions';
+$_lang['discuss2.thread_actions_container_desc'] = 'Thread actions links/buttons container. These actions are shown for moderators.';
+$_lang['discuss2.thread_actions_item'] = 'Thread Action Item';
+$_lang['discuss2.thread_actions_item_desc'] = 'Item chunk for thread actions';
+$_lang['discuss2.post_actions_container'] = 'Post Actions';
+$_lang['discuss2.post_actions_container_desc'] = 'Post actions links/buttons container. Actions include moderator and post author actions.';
+$_lang['discuss2.post_actions_item'] = 'Post Action Item';
+$_lang['discuss2.post_actions_item_desc'] = 'Item chunk for post actions';
+
+
 // Search
 $_lang['discuss2.search'] = 'Search';
 $_lang['discuss2.use_discuss_search'] = 'Use Discuss2 Search';
@@ -168,6 +210,20 @@ $_lang['discuss2.search_engine_solr'] = 'Discuss2 Solr Search';
 $_lang['discuss2.search_engine_solr_value'] = 'disSearchSolr';
 $_lang['discuss2.search_engine_sphinx'] = 'Discuss2 Sphinx Search';
 $_lang['discuss2.search_engine_sphinx_value'] = 'disSearchSphinx';
+
+// Categories
+
+//Category Chunks
+$_lang['discuss2.categories_container'] = 'Categories Container Chunk';
+$_lang['discuss2.categories_container_desc'] = 'Categories container chunk. This holds all categories and their board chunks.';
+$_lang['discuss2.categories_category_chunk'] = 'Category Row Chunk';
+$_lang['discuss2.categories_category_chunk_desc'] = 'Category row chunk. Chunk holds all boards that are children to it.';
+$_lang['discuss2.categories_board_row'] = 'Board Row Chunk';
+$_lang['discuss2.categories_board_row_desc'] = 'Board row chunk. Chunk also holds last post details and sub boards if there are any.';
+$_lang['discuss2.categories_subboard_container'] = 'Sub Board Container Chunk';
+$_lang['discuss2.categories_subboard_container_desc'] = 'Holds sub board row items. Items are the children of parent board.';
+$_lang['discuss2.categories_subboard_row'] = 'Sub Board Row';
+$_lang['discuss2.categories_subboard_row_desc'] = 'Sub board row item. Holds only information directly related to sub board.';
 
 // Boards
 $_lang['discuss2.boards'] = 'Boards';
@@ -245,104 +301,5 @@ $_lang['discuss2.template_per_category'] = 'Template per Category';
 $_lang['discuss2.template_board'] = 'Template for Board';
 $_lang['discuss2.template_per_board'] = 'Template per Board';
 
-$_lang['discuss2.dummy'] = 'dummy';
-$_lang['discuss2.dummy'] = 'dummy';
-$_lang['discuss2.dummy'] = 'dummy';
-$_lang['discuss2.dummy'] = 'dummy';
-$_lang['discuss2.dummy'] = 'dummy';
-$_lang['discuss2.dummy'] = 'dummy';
-$_lang['discuss2.dummy'] = 'dummy';
-$_lang['discuss2.dummy'] = 'dummy';
-$_lang['discuss2.dummy'] = 'dummy';
-$_lang['discuss2.dummy'] = 'dummy';
-$_lang['discuss2.dummy'] = 'dummy';
-$_lang['discuss2.dummy'] = 'dummy';
-$_lang['discuss2.dummy'] = 'dummy';
-$_lang['discuss2.dummy'] = 'dummy';
-$_lang['discuss2.dummy'] = 'dummy';
-$_lang['discuss2.dummy'] = 'dummy';
-$_lang['discuss2.dummy'] = 'dummy';
-$_lang['discuss2.dummy'] = 'dummy';
-$_lang['discuss2.dummy'] = 'dummy';
-$_lang['discuss2.dummy'] = 'dummy';
-$_lang['discuss2.dummy'] = 'dummy';
-$_lang['discuss2.dummy'] = 'dummy';
-$_lang['discuss2.dummy'] = 'dummy';
-$_lang['discuss2.dummy'] = 'dummy';
-$_lang['discuss2.dummy'] = 'dummy';
-$_lang['discuss2.dummy'] = 'dummy';
-$_lang['discuss2.dummy'] = 'dummy';
-$_lang['discuss2.dummy'] = 'dummy';
-$_lang['discuss2.dummy'] = 'dummy';
-$_lang['discuss2.dummy'] = 'dummy';
-$_lang['discuss2.dummy'] = 'dummy';
-$_lang['discuss2.dummy'] = 'dummy';
-$_lang['discuss2.dummy'] = 'dummy';
-$_lang['discuss2.dummy'] = 'dummy';
-$_lang['discuss2.dummy'] = 'dummy';
-$_lang['discuss2.dummy'] = 'dummy';
-$_lang['discuss2.dummy'] = 'dummy';
-$_lang['discuss2.dummy'] = 'dummy';
-$_lang['discuss2.dummy'] = 'dummy';
-$_lang['discuss2.dummy'] = 'dummy';
-$_lang['discuss2.dummy'] = 'dummy';
-$_lang['discuss2.dummy'] = 'dummy';
-$_lang['discuss2.dummy'] = 'dummy';
-$_lang['discuss2.dummy'] = 'dummy';
-$_lang['discuss2.dummy'] = 'dummy';
-$_lang['discuss2.dummy'] = 'dummy';
-$_lang['discuss2.dummy'] = 'dummy';
-$_lang['discuss2.dummy'] = 'dummy';
-$_lang['discuss2.dummy'] = 'dummy';
-$_lang['discuss2.dummy'] = 'dummy';
-$_lang['discuss2.dummy'] = 'dummy';
-$_lang['discuss2.dummy'] = 'dummy';
-$_lang['discuss2.dummy'] = 'dummy';
-$_lang['discuss2.dummy'] = 'dummy';
-$_lang['discuss2.dummy'] = 'dummy';
-$_lang['discuss2.dummy'] = 'dummy';
-$_lang['discuss2.dummy'] = 'dummy';
-$_lang['discuss2.dummy'] = 'dummy';
-$_lang['discuss2.dummy'] = 'dummy';
-$_lang['discuss2.dummy'] = 'dummy';
-$_lang['discuss2.dummy'] = 'dummy';
-$_lang['discuss2.dummy'] = 'dummy';
-$_lang['discuss2.dummy'] = 'dummy';
-$_lang['discuss2.dummy'] = 'dummy';
-$_lang['discuss2.dummy'] = 'dummy';
-$_lang['discuss2.dummy'] = 'dummy';
-$_lang['discuss2.dummy'] = 'dummy';
-$_lang['discuss2.dummy'] = 'dummy';
-$_lang['discuss2.dummy'] = 'dummy';
-$_lang['discuss2.dummy'] = 'dummy';
-$_lang['discuss2.dummy'] = 'dummy';
-$_lang['discuss2.dummy'] = 'dummy';
-$_lang['discuss2.dummy'] = 'dummy';
-$_lang['discuss2.dummy'] = 'dummy';
-$_lang['discuss2.dummy'] = 'dummy';
-$_lang['discuss2.dummy'] = 'dummy';
-$_lang['discuss2.dummy'] = 'dummy';
-$_lang['discuss2.dummy'] = 'dummy';
-$_lang['discuss2.dummy'] = 'dummy';
-$_lang['discuss2.dummy'] = 'dummy';
-$_lang['discuss2.dummy'] = 'dummy';
-$_lang['discuss2.dummy'] = 'dummy';
-$_lang['discuss2.dummy'] = 'dummy';
-$_lang['discuss2.dummy'] = 'dummy';
-$_lang['discuss2.dummy'] = 'dummy';
-$_lang['discuss2.dummy'] = 'dummy';
-$_lang['discuss2.dummy'] = 'dummy';
-$_lang['discuss2.dummy'] = 'dummy';
-$_lang['discuss2.dummy'] = 'dummy';
-$_lang['discuss2.dummy'] = 'dummy';
-$_lang['discuss2.dummy'] = 'dummy';
-$_lang['discuss2.dummy'] = 'dummy';
-$_lang['discuss2.dummy'] = 'dummy';
-$_lang['discuss2.dummy'] = 'dummy';
-$_lang['discuss2.dummy'] = 'dummy';
-$_lang['discuss2.dummy'] = 'dummy';
-$_lang['discuss2.dummy'] = 'dummy';
-$_lang['discuss2.dummy'] = 'dummy';
-$_lang['discuss2.dummy'] = 'dummy';
 
 

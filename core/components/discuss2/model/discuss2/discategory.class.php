@@ -88,56 +88,79 @@ class disCategory extends modResource {
         $fieldsToLoad = array('id', 'pagetitle', 'longtitle', 'description', 'parent',
             'alias', 'pub_date', 'parent', 'introtext', 'content', 'createdby', 'createdon', 'class_key');
         $c = $this->xpdo->newQuery('disBoard');
+        $c->setClassAlias('Board');
         $c->distinct();
         $c->select(array(
-            $this->xpdo->getSelectColumns('disBoard', 'disBoard', 'Board_', $fieldsToLoad),
-            $this->xpdo->getSelectColumns('disBoard', 'subBoard', 'SubBoard_', $fieldsToLoad),
-            'lastpost_post_title' => 'Post.title',
+            $this->xpdo->getSelectColumns('disBoard', 'Board', 'Board_', $fieldsToLoad),
+            $this->xpdo->getSelectColumns('disBoard', 'subBoard', 'subBoard_', $fieldsToLoad),
+            'lastpost_pagetitle' => 'Post.pagetitle',
             'lastpost_content' => 'Post.content',
             'lastpost_id' => 'Post.id',
-            'lastpost_author' => 'Post.author',
-            'lastpost_username' => 'Post.username',
-            'lastpost_title' => 'Post.thread_title',
-            'lastpost_thread_id' => 'Post.thread_id',
-            'lastpost_parent' => 'Post.thread_parent',
-            'lastpost_class_key' => 'Post.thread_class_key'
+            'lastpost_author' => 'Post.createdby',
+            'lastpost_username' => 'User.username',
+            'lastpost_display_name' => 'Profile.display_name',
+            'lastpost_use_display_name' => 'Profile.use_display_name',
+            'lastpost_thread_id' => 'Post.parent',
+            'lastpost_parent' => 'c.ancestor', // Setting this to Board to show as last post on it
+            'lastpost_class_key' => 'Post.class_key',
+            'lastpost_createdon' => 'Post.createdon',
+            'subPost_pagetitle' => 'subPost.pagetitle',
+            'subPost_content' => 'subPost.content',
+            'subPost_id' => 'subPost.id',
+            'subPost_author' => 'subPost.createdby',
+            'subPost_username' => 'User2.username',
+            'subPost_display_name' => 'Profile2.display_name',
+            'subPost_use_display_name' => 'Profile2.use_display_name',
+            'subPost_thread_id' => 'subPost.parent',
+            'subPost_parent' => 'c2.ancestor', // Setting this to Board to show as last subPost on it
+            'subPost_class_key' => 'subPost.class_key',
+            'subPost_createdon' => 'subPost.createdon'
         ));
-        $c->leftJoin('disBoard', 'subBoard', "{$this->xpdo->escape('subBoard')}.{$this->xpdo->escape('parent')} = {$this->xpdo->escape('disBoard')}.{$this->xpdo->escape('id')}
-            AND {$this->xpdo->escape('subBoard')}.{$this->xpdo->escape('class_key')} = 'disBoard' ");
+        $c->innerJoin('disClosure', 'c', "{$this->xpdo->escape('c')}.{$this->xpdo->escape('ancestor')} = {$this->xpdo->escape('Board')}.{$this->xpdo->escape('id')} ");
+        $c->leftJoin('disBoard', 'subBoard', "{$this->xpdo->escape('subBoard')}.{$this->xpdo->escape('parent')} = {$this->xpdo->escape('Board')}.{$this->xpdo->escape('id')}
+            AND {$this->xpdo->escape('subBoard')}.{$this->xpdo->escape('class_key')} = 'disBoard'");
 
-        $lastPostQ = $this->xpdo->newQuery('disPost');
-        $lastPostQ->select(array(
-            'title' => 'disPost.pagetitle',
-            'content' => 'disPost.content',
-            'id' => 'disPost.id',
-            'author' => 'disPost.createdby',
-            'username' => 'disUser.username',
-            'thread_title' => 'disThread.pagetitle',
-            'thread_parent' => 'disThread.parent',
-            'thread_id' => 'disThread.id',
-            'thread_class_key' => 'disThread.class_key'
-        ));
-        $lastPostQ->innerJoin('disThread', 'disThread', "{$this->xpdo->escape('disThread')}.{$this->xpdo->escape('id')} = {$this->xpdo->escape('disPost')}.{$this->xpdo->escape('parent')}");
-        $lastPostQ->innerJoin('disUser', 'disUser', "{$this->xpdo->escape('disUser')}.{$this->xpdo->escape('id')} = {$this->xpdo->escape('disPost')}.{$this->xpdo->escape('createdby')}");
-        $lastPostQ->where(array(
-            'class_key' => 'disPost',
-            "{$this->xpdo->escape('disPost')}.{$this->xpdo->escape('createdon')} = (SELECT MAX({$this->xpdo->escape('subPost')}.{$this->xpdo->escape('createdon')}) FROM {$this->xpdo->getTableName('disPost')} {$this->xpdo->escape('subPost')}
-                WHERE {$this->xpdo->escape('subPost')}.{$this->xpdo->escape('parent')} = {$this->xpdo->escape('disThread')}.{$this->xpdo->escape('id')})"
-        ));
-        $lastPostQ->groupby('disPost.parent');
-        $lastPostQ->sortby('disPost.createdon', 'DESC');
+        $cSub = $this->xpdo->newQuery('disPost');
+        $cSub->setClassAlias('postPrimary');
+        $cSub->select(array("MAX({$this->xpdo->escape('postPrimary')}.{$this->xpdo->escape('id')})"));
+        $cSub->leftJoin('disClosure', 'c3', "{$this->xpdo->escape('postPrimary')}.{$this->xpdo->escape('id')} = {$this->xpdo->escape('c3')}.{$this->xpdo->escape('descendant')}");
+        $cSub->where(array(
+            "{$this->xpdo->escape('c3')}.{$this->xpdo->escape('ancestor')} = {$this->xpdo->escape('Board')}.{$this->xpdo->escape('id')}",
+            "{$this->xpdo->escape('postPrimary')}.{$this->xpdo->escape('class_key')} = 'disPost'"));
+        $cSub->prepare();
 
-        $lastPostQ->prepare();
-        $c->query['from']['joins'][] = array(
-            'type' => xPDOQuery::SQL_JOIN_LEFT,
-            'table' => "({$lastPostQ->toSQL()})",
-            'alias' => 'Post',
-            'conditions' => new xPDOQueryCondition(array('sql' => "{$this->xpdo->escape('Post')}.{$this->xpdo->escape('thread_parent')} = {$this->xpdo->escape('disBoard')}.{$this->xpdo->escape('id')}"))
-        );
-        $c->where(array('parent' => $this->id, 'published' => 1, 'deleted' => 0));
-        $c->groupby('disBoard.id');
+        $c->leftJoin('disPost', 'Post', "{$this->xpdo->escape('Post')}.{$this->xpdo->escape('parent')} = {$this->xpdo->escape('c')}.{$this->xpdo->escape('descendant')}
+            AND {$this->xpdo->escape('Post')}.{$this->xpdo->escape('class_key')} = 'disPost'
+            AND{$this->xpdo->escape('Post')}.{$this->xpdo->escape('id')} = ({$cSub->toSQL()})");
+
+        $cSub2 = $this->xpdo->newQuery('disPost');
+        $cSub2->setClassAlias('postSecondary');
+        $cSub2->select(array("MAX({$this->xpdo->escape('postSecondary')}.{$this->xpdo->escape('id')})"));
+        $cSub2->leftJoin('disClosure', 'c4', "{$this->xpdo->escape('postSecondary')}.{$this->xpdo->escape('id')} = {$this->xpdo->escape('c4')}.{$this->xpdo->escape('descendant')}");
+        $cSub2->where(array(
+            "{$this->xpdo->escape('c4')}.{$this->xpdo->escape('ancestor')} = {$this->xpdo->escape('subBoard')}.{$this->xpdo->escape('id')}",
+            "{$this->xpdo->escape('postSecondary')}.{$this->xpdo->escape('class_key')} = 'disPost'"
+        ));
+
+        $cSub2->prepare();
+        $c->leftJoin('disClosure', 'c2', "{$this->xpdo->escape('c2')}.{$this->xpdo->escape('ancestor')} = {$this->xpdo->escape('subBoard')}.{$this->xpdo->escape('id')} ");
+        $c->leftJoin('disPost', 'subPost', "{$this->xpdo->escape('subPost')}.{$this->xpdo->escape('parent')} = {$this->xpdo->escape('c2')}.{$this->xpdo->escape('descendant')}
+            AND {$this->xpdo->escape('subPost')}.{$this->xpdo->escape('class_key')} = 'disPost'
+            AND subPost.id = ({$cSub2->toSQL()})");
+
+        $c->leftJoin('disUser', 'User', "{$this->xpdo->escape('User')}.{$this->xpdo->escape('id')} = {$this->xpdo->escape('Post')}.{$this->xpdo->escape('createdby')}");
+        $c->leftJoin('disUserProfile', 'Profile', "{$this->xpdo->escape('Profile')}.{$this->xpdo->escape('internalKey')} = {$this->xpdo->escape('User')}.{$this->xpdo->escape('id')}");
+
+        $c->leftJoin('disUser', 'User2', "{$this->xpdo->escape('User2')}.{$this->xpdo->escape('id')} = {$this->xpdo->escape('subPost')}.{$this->xpdo->escape('createdby')}");
+        $c->leftJoin('disUserProfile', 'Profile2', "{$this->xpdo->escape('Profile2')}.{$this->xpdo->escape('internalKey')} = {$this->xpdo->escape('User2')}.{$this->xpdo->escape('id')}");
+
+        $c->where(array(
+            'Board.parent' => $this->id,
+            'Board.published' => 1,
+            'Board.deleted' => 0,
+        ));
+        $c->sortby("{$this->xpdo->escape('Board')}.{$this->xpdo->escape('menuindex')}", 'ASC');
         $c->prepare();
-
         $rows = self::_loadRows($this->xpdo, 'disCategory', $c);
         $rows = $rows->fetchAll(PDO::FETCH_ASSOC);
         if (count($rows) == 0) {
@@ -159,49 +182,51 @@ class disCategory extends modResource {
             }
         }
         reset($hydrated);
-        $boards = $this->xpdo->discuss2->createTree($hydrated);;
-        $boards = $this->_treeToView($boards);
 
+        $boards = $this->xpdo->discuss2->createTree($hydrated);
+        $boards = $this->_treeToView($boards);
         $this->xpdo->setPlaceholder('discuss2.content', implode("\n",$boards));
     }
 
     private function _treeToView($tree) {
-        $boardRow = $this->xpdo->getOption('boardRow', $this->config, 'category.boardRow');
-        $subBoardRow = $this->xpdo->getOption('subBoardRow', $this->config, 'category.subBoardRow');
+        $boardContainer = $this->xpdo->getOption('subBoardRow', $this->xpdo->discuss2->forumConfig, 'sample.subBoardRow');
+        $boardRow = $this->xpdo->getOption('boardRow', $this->xpdo->discuss2->forumConfig, 'sample.boardRow');
+        $subBoardContainer = $this->xpdo->getOption('categories_subboard_container', $this->xpdo->discuss2->forumConfig, 'sample.subBoardContainer');
+        $subBoardRow = $this->xpdo->getOption('subBoardRow', $this->xpdo->discuss2->forumConfig, 'sample.subBoardRow');
         $boards = array();
+        $parser = $this->xpdo->discuss2->loadParser();
         foreach ($tree as $board) {
             $subBoards = array();
-            if (isset($board['disThread'])) {
-                $lastPost = reset($board['disThread']);
-                unset($board['disThread']);
-                $board['lastpost.title'] = $lastPost['post_title'];
-                $board['lastpost.content'] = $lastPost['content'];
+            if (isset($board['disPost'])) {
+                $lastPost = reset($board['disPost']);
+                unset($board['disPost']);
+                $board['lastpost.pagetitle'] = $parser->parse($lastPost['pagetitle']);
+                $board['lastpost.content'] = $parser->parse($lastPost['content']);
                 $board['lastpost.id'] = $lastPost['id'];
                 $board['lastpost.author_id'] = $lastPost['author'];
-                $board['lastpost.author_uname'] = $lastPost['username'];
-                $board['lastpost.thread_title'] = $lastPost['title'];
-                $board['link'] = $this->xpdo->makeUrl($board['id']);
-                $board['lastpost.link'] = $this->xpdo->makeUrl($lastPost['thread_id']);
-
+                $board['lastpost.author_username'] = ($lastPost['use_display_name'] == 1) ? $lastPost['display_name'] : $lastPost['username'];
+                $board['lastpost.link'] = $this->xpdo->discuss2->getLastPostLink($lastPost['thread_id'], $lastPost['id']);
             }
+            $board['link'] = $this->xpdo->discuss2->makeUrl($board['id']);
             if (!empty($board['disBoard'])) {
                 foreach($board['disBoard'] as $subBoard) {
-                    if (isset($subBoard['disThread'])) {
-                        $lastPost = reset($subBoard['disThread']);
-                        unset($subBoard['disThread']);
-                        $board['lastpost.title'] = $lastPost['post_title'];
-                        $board['lastpost.content'] = $lastPost['content'];
-                        $board['lastpost.id'] = $lastPost['id'];
-                        $board['lastpost.author_id'] = $lastPost['author'];
-                        $board['lastpost.author_uname'] = $lastPost['username'];
-                        $board['lastpost.thread_title'] = $lastPost['title'];
-                        $board['link'] = $this->xpdo->makeUrl($board['id']);
-                        $board['lastpost.link'] = $this->xpdo->makeUrl($lastPost['thread_id']);
+                    if (isset($subBoard['disPost'])) {
+                        $lastPost = reset($subBoard['disPost']);
+                        unset($subBoard['disPost']);
+                        $subBoard['lastpost.pagetitle'] = $parser->parse($lastPost['pagetitle']);
+                        $subBoard['lastpost.content'] = $parser->parse($lastPost['content']);
+                        $subBoard['lastpost.id'] = $lastPost['id'];
+                        $subBoard['lastpost.author_id'] = $lastPost['author'];
+                        $subBoard['lastpost.author_username'] = ($lastPost['use_display_name'] == 1) ? $lastPost['display_name'] : $lastPost['username'];
+                        $subBoard['lastpost.link'] = $this->xpdo->discuss2->getLastPostLink($lastPost['thread_id'], $lastPost['id']);
                     }
+                    $subBoard['link'] = $this->xpdo->discuss2->makeUrl($subBoard['id']);
                     $subBoards[] = $this->xpdo->discuss2->getChunk($subBoardRow,$subBoard);
                 }
             };
-            $boards[] = $this->xpdo->discuss2->getChunk($boardRow,array_merge($board, array('boards' => implode("\n", $subBoards))));
+            $subBoardsChunk = $this->xpdo->discuss2->getChunk($subBoardContainer, array('boards' => implode("\n", $subBoards)));
+            // TODO: Add read/undead threads check
+            $boards[] = $this->xpdo->discuss2->getChunk($boardRow,array_merge($board, array('subBoards' => $subBoardsChunk)));
         }
         return $boards;
     }
@@ -210,15 +235,16 @@ class disCategory extends modResource {
     public function save($cacheFlag = null) {
         $isNew = $this->isNew();
         $this->cacheable = false;
+        $this->set('isfolder', true);
         $saved = parent::save($cacheFlag);
         if ($isNew && $saved) {
             $closure = $this->xpdo->newObject('disClosure');
             $closSaved = $closure->createClosure(intval($this->id), intval($this->parent));
             $resGroup = $this->_saveModGroup();
-            $this->joinGroup($resGroup->id);
+            $this->joinGroup($resGroup);
         } else if ($saved) {
             if ($this->parentChanged !== null) {
-
+                // TODO: Add category move to fire closure changes
             }
         }
         return $saved;

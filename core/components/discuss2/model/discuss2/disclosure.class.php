@@ -28,7 +28,7 @@ class disClosure extends xPDOObject {
         $criteria = new xPDOCriteria($this->xpdo, $q, array('parent' => $parent));
         $criteria->prepare();
         if (!$result= $criteria->stmt->execute()) {
-            $this->xpdo->log(xPDO::LOG_LEVEL_ERROR, "Error " . $criteria->stmt->errorCode() . " executing statement:\n{$sql}\n");
+            $this->xpdo->log(xPDO::LOG_LEVEL_ERROR, "Error " . $criteria->stmt->errorCode() . " executing statement:\n{$q}\n");
         } else {
             $saved = true;
         }

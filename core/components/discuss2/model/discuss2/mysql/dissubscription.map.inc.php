@@ -46,7 +46,7 @@ $xpdo_meta_map['disSubscription']= array (
       array (
         'thread' => 
         array (
-          'collaton' => 'A',
+          'collation' => 'A',
           'length' => '',
           'null' => false,
         ),
