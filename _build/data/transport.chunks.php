@@ -8,7 +8,7 @@ $elementsPath = $sources['elements']."chunks/";
 $chunks = array();
 
 $i = 1;
-foreach(glob($elementsPath) as $chunk) {
+foreach(glob($elementsPath.'*.tpl') as $chunk) {
     $chunks[$i] = $modx->newObject('modChunk');
     $chunks[$i]->fromArray(array(
         'id' => $i,
