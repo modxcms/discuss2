@@ -228,9 +228,8 @@ class Discuss2 {
             $configToLoad = array('id' => $this->modx->resource->id, 'class_key' => $this->modx->resource->class_key);
         }
 
-        if (!$config = $this->modx->getCacheManager()->get("discuss2/configurations/{$configToLoad['class_key']}/{$configToLoad['class_key']}-{{$configToLoad['id']}}")) {
+        if (!$config = $this->modx->getCacheManager()->get("discuss2/configurations/{$configToLoad['class_key']}/{$configToLoad['class_key']}-{$configToLoad['id']}")) {
             $properties = $this->getMergeConfig($this->modx->resource->id);
-
             $this->forumConfig = $properties;
             $this->writeConfig($properties, $configToLoad['class_key'], $configToLoad['id']);
         }  else {

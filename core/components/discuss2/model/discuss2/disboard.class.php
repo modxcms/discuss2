@@ -197,8 +197,8 @@ class disBoard extends modResource {
             'Thread_username' => $this->xpdo->getSelectColumns('disUser', 'User', '', array('username')),
             'Thread_display_name' => $this->xpdo->getSelectColumns('disUserProfile', 'Profile', '', array('display_name')),
             'Thread_use_display_name' => $this->xpdo->getSelectColumns('disUserProfile', 'Profile', '', array('use_display_name')),
-            'Thread_view' => $this->xpdo->getSelectColumns('disThreadProperty', 'Properties', '', array('views')),
-            'Thread_post' => $this->xpdo->getSelectColumns('disThreadProperty', 'Properties', '', array('posts')),
+            'Thread_views' => $this->xpdo->getSelectColumns('disThreadProperty', 'Properties', '', array('views')),
+            'Thread_total_posts' => $this->xpdo->getSelectColumns('disThreadProperty', 'Properties', '', array('posts')),
             'Thread_locked' => $this->xpdo->getSelectColumns('disThreadProperty', 'Properties', '', array('locked')),
             'Thread_answered' => $this->xpdo->getSelectColumns('disThreadProperty', 'Properties', '', array('answered')),
             $this->xpdo->getSelectColumns('disPost', 'Post', 'Post_', $fieldsToLoad),
@@ -347,7 +347,7 @@ class disBoard extends modResource {
         ));
         $c->sortby("{$this->xpdo->escape('Board')}.{$this->xpdo->escape('menuindex')}", 'ASC');
         $c->prepare();
-        $this->xpdo->log(xPDO::LOG_LEVEL_ERROR, $c->toSQL());
+
         $rows = self::_loadRows($this->xpdo, 'disCategory', $c);
         $rows = $rows->fetchAll(PDO::FETCH_ASSOC);
         if (count($rows) == 0) {
@@ -397,7 +397,7 @@ class disBoard extends modResource {
                 $thread['lastpost.createdon'] = $lastPost['createdon'];
                 $thread['link'] = $this->xpdo->discuss2->makeUrl($thread['id']);
                 $thread['lastpost.link'] = $this->xpdo->discuss2->getLastPostLink($thread['id'], $thread['lastpost.id']);
-                if ($thread['posts'] > $perPage) {
+                if ($thread['posts'] > $perPage && $this->xpdo->getOption('enable_posts_pagination', $this->xpdo->discuss2->forumConfig, true) == true) {
                     $thread['thread_pagination'] = $pages->processThreadPagination($thread['id'], $thread['posts'], 'posts_per_page');
                 }
                 $thread['actions'] = $this->xpdo->getChunk($actionsContainer, array('actions' => implode("",$this->getThreadActions($thread['id']))));

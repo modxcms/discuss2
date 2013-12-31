@@ -7,7 +7,7 @@
                 [[+thread_pagination]]
             </div>
         </div>
-        <div class="f8 l-vmiddle l-txtcenter">[![+views]]</div>
+        <div class="f8 l-vmiddle l-txtcenter">[[+views]]</div>
         <div class="f9 l-vmiddle l-txtcenter">[[+total_posts]]</div>
         <div class="f10-f12">
             <p class="posted-by">[[%discuss.board_by]]: [[+username]], [[+createdon:date=`%d-%m-%Y`:ago]]</p>

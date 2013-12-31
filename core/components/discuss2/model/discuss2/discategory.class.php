@@ -206,6 +206,7 @@ class disCategory extends modResource {
                 $board['lastpost.author_id'] = $lastPost['author'];
                 $board['lastpost.author_username'] = ($lastPost['use_display_name'] == 1) ? $lastPost['display_name'] : $lastPost['username'];
                 $board['lastpost.link'] = $this->xpdo->discuss2->getLastPostLink($lastPost['thread_id'], $lastPost['id']);
+                $board = array_merge($board, $this->xpdo->discuss2->stats->getRepliesAndThreads($board['id']));
             }
             $board['link'] = $this->xpdo->discuss2->makeUrl($board['id']);
             if (!empty($board['disBoard'])) {

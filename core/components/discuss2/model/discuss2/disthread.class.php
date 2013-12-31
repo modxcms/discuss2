@@ -117,22 +117,26 @@ class disThread extends modResource {
 
         $threaded = $this->xpdo->getOption('posts_threaded', $this->xpdo->discuss2->forumConfig, false);
         if ($threaded === 'true') {
+            $c->select(array('postReplies_depth' => 'c.depth'));
             $c->select(array($this->xpdo->getSelectColumns('disPost', 'postReplies', 'postReplies_', $fieldsToLoad)));
             $depth = $this->xpdo->getOption('posts_depth', $this->xpdo->discuss2->forumConfig, 1);
             $c->leftJoin('disClosure', 'c', "{$this->xpdo->escape('c')}.{$this->xpdo->escape('ancestor')} = {$this->xpdo->escape('Post')}.{$this->xpdo->escape('id')}");
             $c->leftJoin('disPost', 'postReplies', "{$this->xpdo->escape('postReplies')}.{$this->xpdo->escape('id')} = {$this->xpdo->escape('c')}.{$this->xpdo->escape('descendant')}
-            AND {$this->xpdo->escape('c')}.{$this->xpdo->escape('depth')} BETWEEN 1 AND {$depth}");
+            AND {$this->xpdo->escape('c')}.{$this->xpdo->escape('depth')} BETWEEN 0 AND {$depth}");
             $c->where(array(
                 'postReplies.deleted' => 0,
                 'postReplies.published' => 1
             ));
         }
+        if ($this->xpdo->getOption('enable_posts_pagination', $this->xpdo->discuss2->forumConfig, true) == true) {
+            $offset = isset($this->xpdo->request->parameters['GET']['page']) ? ($this->xpdo->request->parameters['GET']['page'] -1) * $this->xpdo->discuss2->forumConfig['posts_per_page']: 0;
+            $c->limit($this->xpdo->discuss2->forumConfig['posts_per_page'], $offset);
+        }
 
-        $offset = isset($this->xpdo->request->parameters['GET']['page']) ? ($this->xpdo->request->parameters['GET']['page'] -1) * $this->xpdo->discuss2->forumConfig['posts_per_page']: 0;
-        $c->limit($this->xpdo->discuss2->forumConfig['posts_per_page'], $offset);
 
         $c->prepare();
         $c->stmt->execute();
+
         $rows = $c->stmt->fetchAll(PDO::FETCH_ASSOC);
         if (count($rows) == 0) {
             return;
@@ -142,10 +146,22 @@ class disThread extends modResource {
         foreach ($rows as $row) {
             $this->xpdo->discuss2->hydrateRow($row, $hydrated);
         }
+        $parser = $this->xpdo->discuss2->loadParser();
+        $userids = array();
+        foreach ($hydrated as &$post) {
+            $post['pagetitle'] = $parser->parse($post['pagetitle']);
+            $post['content'] = $parser->parse($post['content']);
+            $userids[$post['createdby']] = $post['createdby'];
+        }
+        unset($post);
+        $users = $this->xpdo->getCollection('disUser', array('id:IN' => array_unique(array_values($userids))));
+        foreach ($users as $user) {
+            $userids[$user->id] = $user->toArray();
+        }
         $posts = $this->xpdo->discuss2->createTree($hydrated);
-        $posts = $this->_treeToView($posts);
+        $posts = $this->_treeToView($posts, $userids);
 
-        if ($count > $this->xpdo->discuss2->forumConfig['posts_per_page']) {
+        if ($count > $this->xpdo->discuss2->forumConfig['posts_per_page'] && $this->xpdo->getOption('enable_posts_pagination', $this->xpdo->discuss2->forumConfig, true) == true) {
             $pages = $this->xpdo->discuss2->loadPagination();
             $pagination = $pages->processMainPagination($count, 'posts_per_page');
             $this->xpdo->setPlaceholder('discuss2.pagination', $pagination);
@@ -154,6 +170,7 @@ class disThread extends modResource {
             $newPostForm = $this->xpdo->getOption('new_post_form', $this->xpdo->discuss2->forumConfig, 'sample.newPost');
             $this->xpdo->setPlaceholder('discuss2.form', $this->xpdo->discuss2->getChunk($newPostForm));
         }
+
         //$this->xpdo->setPlaceholder('discuss2.thread_actions', $this->_getThreadActions($this->createdby));
         $this->xpdo->setPlaceholder('discuss2.content', $posts);
     }
@@ -201,30 +218,52 @@ class disThread extends modResource {
         return $links;
     }
 
-    private function _treeToView($tree) {
+    private function _treeToView($tree, $users) {
         $posts = array();
         $postContainer = $this->xpdo->getOption('thread_posts_container', $this->xpdo->discuss2->forumConfig, 'sample.postsContainer');
         $postRow = $this->xpdo->getOption('thread_post_chunk', $this->xpdo->discuss2->forumConfig, 'sample.postrow');
         $actionsContainer = $this->xpdo->getOption('post_actions_container', $this->xpdo->discuss2->forumConfig, 'sample.actionsContainer');
+        $threaded = $this->xpdo->getOption('posts_threaded',$this->xpdo->discuss2->forumConfig, false);
+        if ($threaded) {
+            $replyForm = $this->xpdo->getOption('post_reply_form', $this->xpdo->discuss2->forumConfig, 'sample.replyform');
+            $maxDepth = $this->xpdo->getOption('posts_depth', $this->discuss2->forumConfig, 1);
+        }
 
-        $parser = $this->xpdo->discuss2->loadParser();
-        foreach ($tree as &$post) {
-            $post['pagetitle'] = $parser->parse($post['pagetitle']);
-            $post['content'] = $parser->parse($post['content']);
-            $userids[$post['createdby']] = $post['createdby'];
-        }
-        unset($post);
-        $users = $this->xpdo->getCollection('disUser', array('id:IN' => array_values($userids)));
-        foreach ($users as $user) {
-            $userids[$user->id] = $user->toArray();
-        }
+        $i = 1;
         foreach ($tree as $post) {
-            $post['user'] = $userids[$post['createdby']];
+            $hasChildren = false;
+            $post['user'] = $users[$post['createdby']];
             $post['actions'] = $this->xpdo->getChunk($actionsContainer, array('actions' => implode("", $this->getPostActions($post['createdby'], $post['id']))));
+            if ($threaded == true && $this->xpdo->hasPermission('discuss2.can_post')) {
+                if ($maxDepth > 1) {
+                    $post['form'] = $this->xpdo->discuss2->getChunk($replyForm, array(
+                        'parent' => $post['id'],
+                        'action' => $this->xpdo->discuss2->makeUrl($this->id) . "#post-{$post['id']}",
+                        'submitVar' => 'reply-' . $post['id'],
+                        'pagetitle' => $post['pagetitle']
+                    ));
+                }
+                if (!empty($post['disPost'])) {
+                    $hasChildren = true;
+                    $post['replies'] = $this->_treeToView($post['disPost'], $users);
+                }
+                $post['classes'] = 'depth-' . $post['depth'];
+            }
+            $this->xpdo->log(xPDO::LOG_LEVEL_ERROR, "I = {$i}\n".count($tree));
+            if ($threaded == true && $this->xpdo->hasPermission('discuss2.can_post') && $maxDepth == 1 && $i == count($tree) && $hasChildren == false) {
+                $post['form'] = $this->xpdo->discuss2->getChunk($replyForm, array(
+                    'parent' => ($post['depth'] == 1) ? $post['parent'] : $post['id'],
+                    'action' => $this->xpdo->discuss2->makeUrl($this->id) . "#post-{$post['id']}",
+                    'submitVar' => 'reply-' . $post['id'],
+                    'pagetitle' => $post['pagetitle']
+                ));
+            }
             $posts[] = $this->xpdo->discuss2->getChunk($postRow, $post);
+            $i++;
         }
+
         if (!empty($posts)) {
-            return $this->xpdo->discuss2->getChunk($postContainer, array('posts' => implode("\n", $posts)));
+            return $this->xpdo->discuss2->getChunk($postContainer, array('posts' => implode("\n", $posts), 'classes' => 'depth-' . $post['depth']));
         }
 
     }

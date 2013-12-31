@@ -1,4 +1,4 @@
-<li class="[[+class]] group-fix" id="dis-post-[[+id]]" data-author="[[+user.username:htmlent]]" data-date="[[+createdon_raw]]" data-message="[[+content_raw]]">
+<li class="[[+classes]] group-fix" id="dis-post-[[+id]]" data-author="[[+user.username:htmlent]]" data-date="[[+createdon_raw]]" data-message="[[+content_raw]]">
     [[+answer:neq=``:then=`
     <div class="dis-post-answer-marker">
         [[+answer_count:gt=`1`:then=`
@@ -64,4 +64,8 @@
         <ul class="dis-action-btn">[[+report_link]][[+action_reply]]</ul>
     </div>
     [[+user.signature:notempty=`<div class="dis-signature">[[+user.signature]]</div>`]]
+    [[+replies]]
+
+    [[+form]]
+
 </li>
