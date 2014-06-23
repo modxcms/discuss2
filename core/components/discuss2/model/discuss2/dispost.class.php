@@ -38,7 +38,7 @@ class disPost extends modResource {
         return $saved;
     }
 
-    public function remove() {
+    public function remove(array $ancestors= array ()) {
         $sql = "DELETE FROM {$this->modx->getTableName('disClosure')} WHERE descendant = :id";
         $criteria = new xPDOCriteria($this->modx, $sql, array('id' => $this->id));
         $criteria->prepare();

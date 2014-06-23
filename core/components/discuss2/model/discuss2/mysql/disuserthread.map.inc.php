@@ -13,7 +13,9 @@ $xpdo_meta_map['disUserThread']= array (
     'title' => NULL,
     'messages' => 0,
     'createdon' => 'CURRENT_TIMESTAMP',
+    'createdby' => 0,
     'lastpost' => 'CURRENT_TIMESTAMP',
+    'lastpostby' => 0,
   ),
   'fieldMeta' => 
   array (
@@ -40,12 +42,31 @@ $xpdo_meta_map['disUserThread']= array (
       'default' => 'CURRENT_TIMESTAMP',
       'null' => false,
     ),
+    'createdby' => 
+    array (
+      'dbtype' => 'int',
+      'precision' => '11',
+      'null' => false,
+      'attributes' => 'unsigned',
+      'default' => 0,
+      'phptype' => 'integer',
+    ),
     'lastpost' => 
     array (
       'dbtype' => 'timestamp',
       'phptype' => 'datetime',
       'default' => 'CURRENT_TIMESTAMP',
+      'attributes' => 'ON UPDATE CURRENT_TIMESTAMP',
       'null' => false,
+    ),
+    'lastpostby' => 
+    array (
+      'dbtype' => 'int',
+      'precision' => '11',
+      'null' => false,
+      'attributes' => 'unsigned',
+      'default' => 0,
+      'phptype' => 'integer',
     ),
   ),
   'indexes' => 
@@ -79,6 +100,38 @@ $xpdo_meta_map['disUserThread']= array (
           'null' => false,
           'collation' => 'A',
           'length' => '',
+        ),
+      ),
+    ),
+    'lastby_idx' => 
+    array (
+      'alias' => 'lastby',
+      'unique' => false,
+      'primary' => false,
+      'type' => 'BTREE',
+      'columns' => 
+      array (
+        'lastpostby' => 
+        array (
+          'length' => '',
+          'null' => false,
+          'collation' => 'A',
+        ),
+      ),
+    ),
+    'createdby_idx' => 
+    array (
+      'alias' => 'createdby',
+      'unique' => false,
+      'primary' => false,
+      'type' => 'BTREE',
+      'columns' => 
+      array (
+        'createdby' => 
+        array (
+          'length' => '',
+          'collation' => 'A',
+          'null' => false,
         ),
       ),
     ),

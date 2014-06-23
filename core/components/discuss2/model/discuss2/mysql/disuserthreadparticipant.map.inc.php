@@ -23,7 +23,6 @@ $xpdo_meta_map['disUserThreadParticipant']= array (
       'phptype' => 'integer',
       'attributes' => 'unsigned',
       'null' => false,
-      'index' => 'pk',
     ),
     'userid' => 
     array (
@@ -32,7 +31,6 @@ $xpdo_meta_map['disUserThreadParticipant']= array (
       'phptype' => 'integer',
       'attributes' => 'unsigned',
       'null' => false,
-      'index' => 'pk',
     ),
     'lastread' => 
     array (
@@ -58,10 +56,20 @@ $xpdo_meta_map['disUserThreadParticipant']= array (
           'length' => '',
           'null' => false,
         ),
+      ),
+    ),
+    'user_idx' => 
+    array (
+      'alias' => 'user',
+      'primary' => false,
+      'unique' => false,
+      'type' => 'BTREE',
+      'columns' => 
+      array (
         'userid' => 
         array (
-          'collation' => 'A',
           'length' => '',
+          'collation' => 'A',
           'null' => false,
         ),
       ),

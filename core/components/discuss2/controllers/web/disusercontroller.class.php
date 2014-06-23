@@ -17,11 +17,11 @@ class disUserController extends disWebController {
             'key' => 'discuss2.subscriptions',
             'chunk' => 'user_pages_subscriptions'
         ),
-        /*'view/messages' => array(
+        'view/messages' => array(
             'key' => 'discuss2.messages',
             'chunk' => 'user_pages_pms'
         ),
-        'merge/account' => array(
+        /*'merge/account' => array(
             'key' => 'discuss2.merge_account',
             'chunk' => 'user_merge'
         )*/

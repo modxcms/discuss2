@@ -298,6 +298,8 @@ class disThread extends modResource {
         return $saved;
     }
 
-    public function remove() {}
+    public function remove(array $ancestors= array ()) {
+        parent::remove();
+    }
 
 }

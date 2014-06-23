@@ -294,12 +294,20 @@
         <field key="title" dbtype="varchar" precision="255" phptype="string" null="false" />
         <field key="messages" dbtype="int" precision="11" null="false" attributes="unsigned" default="0" phptype="integer" />
         <field key="createdon" dbtype="timestamp" phptype="datetime" default="CURRENT_TIMESTAMP" null="false"/>
-        <field key="lastpost" dbtype="timestamp" phptype="datetime" default="CURRENT_TIMESTAMP" null="false"/>
+        <field key="createdby"  dbtype="int" precision="11" null="false" attributes="unsigned" default="0" phptype="integer" />
+        <field key="lastpost" dbtype="timestamp" phptype="datetime" default="CURRENT_TIMESTAMP" attributes="ON UPDATE CURRENT_TIMESTAMP" null="false"/>
+        <field key="lastpostby" dbtype="int" precision="11" null="false" attributes="unsigned" default="0" phptype="integer" />
         <index alias="createdon" name="createdon_idx" unique="false" primary="false" type="BTREE">
             <column key="createdon" null="false" collation="A" length="" />
         </index>
         <index alias="lastpost" name="lastpost_idx" unique="false" primary="false" type="BTREE">
             <column key="lastpost" null="false" collation="A" length="" />
+        </index>
+        <index alias="lastby" name="lastby_idx" unique="false" primary="false" type="BTREE">
+            <column key="lastpostby" length="" null="false" collation="A" />
+        </index>
+        <index alias="createdby" name="createdby_idx" unique="false" primary="false" type="BTREE">
+            <column key="createdby" length="" collation="A" null="false" />
         </index>
     </object>
     <object class="disUserThreadPost" table="user_thread_post" extends="xPDOSimpleObject">
@@ -319,12 +327,14 @@
         </index>
     </object>
     <object class="disUserThreadParticipant" table="user_thread_participants" extends="xPDOObject">
-        <field key="thread" dbtype="int" precision="11" phptype="integer" attributes="unsigned" null="false" index="pk" />
-        <field key="userid" dbtype="int" precision="11" phptype="integer" attributes="unsigned" null="false" index="pk" />
+        <field key="thread" dbtype="int" precision="11" phptype="integer" attributes="unsigned" null="false" />
+        <field key="userid" dbtype="int" precision="11" phptype="integer" attributes="unsigned" null="false"/>
         <field key="lastread" dbtype="timestamp" phptype="datetime" null="false" default="0" />
         <index alias="PRIMARY" name="PRIMARY" primary="true" unique="true" type="BTREE">
             <column key="thread" collation="A" length="" null="false"/>
-            <column key="userid" collation="A" length="" null="false"/>
+        </index>
+        <index alias="user" name="user_idx" primary="false" unique="false" type="BTREE">
+            <column key="userid" length="" collation="A" null="false" />
         </index>
         <index alias="read" name="read_idx" primary="false" unique="false" type="BTREE">
             <column key="lastread" length="" collation="A" null="false" />

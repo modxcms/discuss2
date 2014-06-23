@@ -70,7 +70,6 @@ abstract class disWebController {
         $this->afterGetContent($obj);
         $this->_getContentChunk();
         $view = $this->runPageController($obj);
-        // TODO : remove sample. prefix
 
         $view['pagetitle'] = $this->modx->lexicon($this->currentAction[$this->action]['key']);
         $this->modx->toPlaceholder('discuss2.content',$this->discuss->getChunk($this->chunk, $view));
@@ -131,6 +130,7 @@ abstract class disWebController {
         $controllername .= "Controller";
         if (!file_exists($path.$controller)) {
             $this->modx->log(xPDO::LOG_LEVEL_ERROR, 'Could not find page controller ' . $controller . " from " . $path);
+            return false;
         }
         require_once $path.$controller;
         $this->pageController = new $controllername($this->modx, $this->discuss, $obj);
